@@ -1,0 +1,32 @@
+@App:name("CamundaStreamTutorialApplication")
+
+@App:description("Description of the plan")
+
+@source(
+	type = 'http', 
+	receiver.url = 'http://localhost:8081/camundaStream', 
+	@map(type = 'json')) 
+@sink(type = 'log') 
+define stream CamunaInputStream(amount int, instanceID string);
+
+@sink(
+	type = 'http', 
+	publisher.url = 'http://localhost:8080/engine-rest/message',
+	headers = "'Host:localhost:8080", 
+	method = 'POST',
+	@map(
+		type = 'json',
+		@payload("""{"messageName": "{{messageName}}", "processInstanceId": "{{processInstanceID}}"}""")))
+@sink(type = 'log',
+    @map(
+		type = 'json',
+		@payload("""{"messageName": "{{messageName}}", "processInstanceId": "{{processInstanceID}}"}""")))
+define stream MessageStream(processInstanceID string, messageName string);
+
+from CamunaInputStream[amount > 10]
+select instanceID as processInstanceID, 'msg1' as messageName
+insert into MessageStream;
+
+from CamunaInputStream[amount <= 10]
+select instanceID as processInstanceID, 'msg2' as messageName
+insert into MessageStream;

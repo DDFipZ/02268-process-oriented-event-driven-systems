@@ -1,21 +1,6 @@
 {
   "components": [
     {
-      "subtype": "datetime",
-      "dateLabel": "Date",
-      "label": "Date time",
-      "type": "datetime",
-      "layout": {
-        "row": "Row_1chwxwd",
-        "columns": null
-      },
-      "id": "Field_07wbgam",
-      "key": "ticket_datetime",
-      "timeLabel": "Time",
-      "timeSerializingFormat": "utc_offset",
-      "timeInterval": 15
-    },
-    {
       "values": [
         {
           "label": "Rejsekort",
