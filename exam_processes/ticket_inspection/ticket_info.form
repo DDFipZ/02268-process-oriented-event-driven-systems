@@ -1,0 +1,58 @@
+{
+  "components": [
+    {
+      "subtype": "datetime",
+      "dateLabel": "Date",
+      "label": "Date time",
+      "type": "datetime",
+      "layout": {
+        "row": "Row_1chwxwd",
+        "columns": null
+      },
+      "id": "Field_07wbgam",
+      "key": "ticket_datetime",
+      "timeLabel": "Time",
+      "timeSerializingFormat": "utc_offset",
+      "timeInterval": 15
+    },
+    {
+      "values": [
+        {
+          "label": "Rejsekort",
+          "value": "rejsekort"
+        },
+        {
+          "label": "Ungdomskort",
+          "value": "ungdomskort"
+        }
+      ],
+      "label": "Ticket Type",
+      "type": "select",
+      "layout": {
+        "row": "Row_16rs0ip",
+        "columns": null
+      },
+      "id": "Field_09h9nyx",
+      "key": "ticket_type"
+    },
+    {
+      "label": "Ticket ID",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1v77eti",
+        "columns": null
+      },
+      "id": "Field_1fjner7",
+      "key": "ticket_id"
+    }
+  ],
+  "type": "default",
+  "id": "ticket_info",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.10.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.19.0",
+  "schemaVersion": 8
+}
