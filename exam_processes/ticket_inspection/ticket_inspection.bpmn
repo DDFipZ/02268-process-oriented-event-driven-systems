@@ -177,7 +177,7 @@
         <dc:Bounds x="2022" y="212" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0erpmcr_di" bpmnElement="Activity_03ksdwk">
-        <dc:Bounds x="1090" y="80" width="100" height="80" />
+        <dc:Bounds x="370" y="70" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_0jhalij_di" bpmnElement="Flow_0jhalij">
         <di:waypoint x="1780" y="230" />
@@ -262,15 +262,14 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1fn4esn_di" bpmnElement="Flow_1fn4esn">
         <di:waypoint x="1860" y="205" />
-        <di:waypoint x="1860" y="120" />
-        <di:waypoint x="1190" y="120" />
+        <di:waypoint x="1860" y="110" />
+        <di:waypoint x="470" y="110" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1866" y="140" width="87" height="40" />
+          <dc:Bounds x="1866" y="135" width="87" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_08l5u8c_di" bpmnElement="Flow_08l5u8c">
-        <di:waypoint x="1090" y="120" />
-        <di:waypoint x="420" y="120" />
+        <di:waypoint x="420" y="150" />
         <di:waypoint x="420" y="205" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
