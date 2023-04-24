@@ -50,9 +50,21 @@ define stream CheckInCardStream (messageId string, cardId string, checkInMachine
 	@map(type = 'json'))
 define stream CreateRejsekortStatus (messageId string, cardId string, isCheckedIn bool);
 
+@source(type = 'http-service', receiver.url = "http://0.0.0.0:7370/reserveJourney", source.id = "reserveJourney", method="POST",
+	@map(type = 'json', 
+		@attributes(origin = "$.event.origin", messageId = "trp:messageId", destination = "$.event.destination")))
+define stream ReserveJourneyStream (messageId string, origin string, destination string);
+
+@sink(type = 'http-service-response', http.status.code="200", source.id = "checkInCard", message.id = "{{messageId}}", 
+	@map(type = 'json'))
+define stream CreateRejsekortStatus (messageId string, cardId string, isCheckedIn bool);
+
 define table DB(cardId string, isCheckedIn bool);
 
 define table ticketsDB(id string, name string, journey string, startTime string, endTime string);
+
+define table reservedJourneysDB(id string, seatsReserved int);
+
 
 @info(name = 'CreateTicket')
 from CreateTicketStream

@@ -1,0 +1,88 @@
+@App:name("TEST1")
+
+@App:description("Description of the plan")
+
+@Source(type = 'http',
+        receiver.url='http://0.0.0.0:7370/location',
+        basic.auth.enabled='false',
+        @map(type='json'))
+define stream LocationStream (location1 string, location2 string);
+
+@sink(type='log')
+define stream LocationLog (location string);
+
+@sink(type='http-request', sink.id='rejseplanenAPI', publisher.url='http://xmlopen.rejseplanen.dk/bin/rest.exe/location?input={{location}}&format=json', method='GET',@map(type='json'))
+define stream RejseplanenAPI(location string);
+
+@source(type = 'http-response', sink.id='rejseplanenAPI', @map(type='json', enclosing.element='$', @attributes(firstResult = 'LocationList.StopLocation[0].id')))
+define stream RejseplanenResponse(firstResult string);
+
+@sink(type='http-request', sink.id='Journey', publisher.url='http://xmlopen.rejseplanen.dk/bin/rest.exe/departureBoard?id={{originId}}&direction={{destinationId}}&useTog=1&useBus=0&useMetro=0&format=json', method='GET',@map(type='json'))
+define stream JourneyStream(originId string, destinationId string);
+
+@source(type = 'http-response', sink.id='Journey', @map(type='json', enclosing.element='$', @attributes(stop = 'DepartureBoard.Departure[0].stop', finalStop = 'DepartureBoard.Departure[0].finalStop', time = 'DepartureBoard.Departure[0].time', date = 'DepartureBoard.Departure[0].date')))
+define stream JourneyResponse(stop string, finalStop string, time string, date string);
+
+@sink(type='log') 
+define stream JourneyLog(stop string, finalStop string, time string, date string);
+
+@sink(type='log') 
+define stream JourneyReserve(status string);
+
+@sink(type='log')
+define stream JourneyReserveLog(status string, seats int);
+
+@sink(type='log') 
+define stream RejseplanenLog(firstResult string);
+
+define table reservedDB(key string, reserved int, status string);
+
+-- Count the incoming events
+@info(name='passThrough')
+from LocationStream
+select location1 as location
+insert into LocationLog;
+
+from LocationStream
+select location2 as location
+insert into LocationLog;
+
+@info(name='query_name') 
+from LocationStream
+select location1 as location
+insert into RejseplanenAPI;
+
+from LocationStream
+select location2 as location
+insert into RejseplanenAPI;
+
+@info(name='Combine locations for Journey') 
+from every e1=RejseplanenResponse, e2=RejseplanenResponse
+select e1.firstResult as originId, e2.firstResult as destinationId
+insert into JourneyStream;
+
+@info(name='query_nam1e')
+from RejseplanenResponse
+select firstResult as firstResult
+insert into RejseplanenLog;
+
+@info(name='JourneyLog')
+from JourneyResponse
+select *
+insert into JourneyLog;
+
+@info(name='ReserveJourney') 
+from JourneyResponse
+left outer join reservedDB
+on str:concat(stop, finalStop, time, date) == reservedDB.key
+select str:concat(stop, finalStop, time, date) as key, ifThenElse(reservedDB.reserved < 0, 1, 2) as reserved,
+ifThenElse(reservedDB.reserved >=4 , 'fully booked', 'seats available') as status
+update or insert into reservedDB
+set reservedDB.reserved = reserved
+on key;
+
+@info(name='JourneyReserveLog') 
+from JourneyResponse as j join reservedDB as r
+on str:concat(j.stop, j.finalStop, j.time, j.date) == r.key
+select r.status as status, r.reserved as seats
+insert into JourneyReserveLog;
