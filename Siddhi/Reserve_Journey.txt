@@ -30,10 +30,10 @@ define stream RejseplanenAPI2(location string);
 define stream RejseplanenResponse2(firstResult string);
 
 
-@sink(type='http-request', sink.id='Journey', publisher.url='http://xmlopen.rejseplanen.dk/bin/rest.exe/departureBoard?id={{originId}}&direction={{destinationId}}&useTog=1&useBus=0&useMetro=0&format=json', method='GET',@map(type='json'))
+@sink(type='http-request', sink.id='Journey', publisher.url='http://xmlopen.rejseplanen.dk/bin/rest.exe/trip?originId={{originId}}&destId={{destinationId}}&useTog=1&useBus=0&useMetro=0&format=json', method='GET',@map(type='json'))
 define stream JourneyStream(originId string, destinationId string);
 
-@source(type = 'http-response', sink.id='Journey', @map(type='json', enclosing.element='$', @attributes(stop = 'DepartureBoard.Departure[0].stop', finalStop = 'DepartureBoard.Departure[0].finalStop', time = 'DepartureBoard.Departure[0].time', date = 'DepartureBoard.Departure[0].date')))
+@source(type = 'http-response', sink.id='Journey', @map(type='json', enclosing.element='$', @attributes(stop = 'TripList.Trip[0].Leg.Origin.name', finalStop = 'TripList.Trip[0].Leg.Destination.name', time = 'TripList.Trip[0].Leg.Origin.time', date = 'TripList.Trip[0].Leg.Origin.date')))
 define stream JourneyResponse(stop string, finalStop string, time string, date string);
 
 @sink(type='log') 
