@@ -6,8 +6,6 @@ import random
 import requests
 from pytimedinput import timedInput
 
-TIMEOUT = 3
-
 # siddhi event processor
 target_url = "http://0.0.0.0:7370/train"
 
@@ -49,7 +47,7 @@ def temperature_generator():
 # implements a random number of new passengers until the capacity is reached
 def passengers_generator(curr_passengers):
     if curr_passengers < TRAIN_CAPACITY:
-        return curr_passengers + random.randint(5, min(10, TRAIN_CAPACITY - curr_passengers))
+        return curr_passengers + random.randint(1, min(10, TRAIN_CAPACITY - curr_passengers))
 
 
 # sets a cooldown interval between 1 and 6 minutes
