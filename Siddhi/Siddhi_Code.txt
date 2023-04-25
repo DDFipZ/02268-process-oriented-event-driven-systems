@@ -28,7 +28,19 @@ define stream CheckValid (messageId string, cardId string, cardType string, inst
 
 @sink(type = 'http-service-response', source.id = "checkValid", message.id = "{{messageId}}", 
 	@map(type = 'json'))
-define stream CheckValidResponseStream (messageId string, isValid bool, instanceID string);
+@sink(
+	type = 'http',
+	publisher.url = 'http://camunda:8080/engine-rest/message',
+	headers = "'Host:camunda:8080", 
+	method = 'POST',
+	@map(
+		type = 'json',
+		@payload("""{"messageName": "{{messageName}}", "processInstanceId": "{{instanceID}}"}""")))
+@sink(type = 'log',
+    @map(
+		type = 'json',  
+		@payload("""{"messageName": "{{messageName}}", "processInstanceId": "{{instanceID}}"}""")))
+define stream CheckValidResponseStream (messageId string, isValid bool, messageName string, instanceID string);
 
 /* DO NOT USE*/
 @source(type = 'http-service', receiver.url = "http://0.0.0.0:7370/checkIn", source.id = "checkIn", 
@@ -81,14 +93,14 @@ from CheckValid[cardType == 'ticket']
 left outer join ticketsDB
 on CheckValid.cardId == ticketsDB.id
 select 
-CheckValid.messageId, ifThenElse(ticketsDB.id is null, false , true) as isValid, CheckValid.instanceID as instanceID
+CheckValid.messageId, (ticketsDB.id is null) as isValid, ifThenElse(ticketsDB.id is null, "invalid_ticket" , "valid_ticket") as messageName, CheckValid.instanceID as instanceID
 insert into CheckValidResponseStream;
 
 @info(name='CheckValid Rejsekort') 
 from CheckValid[cardType == 'rejsekort']
 join DB
 on CheckValid.cardId == DB.cardId
-select messageId, isCheckedIn as isValid, CheckValid.instanceID as instanceID
+select messageId, isCheckedIn as isValid, ifThenElse(isCheckedIn, "valid_ticket", "invalid_ticket") as messageName, CheckValid.instanceID as instanceID
 insert into CheckValidResponseStream;
 
 
