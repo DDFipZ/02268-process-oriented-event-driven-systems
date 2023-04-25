@@ -2,11 +2,17 @@
 
 @App:description("Description of the plan")
 
-@Source(type = 'http',
+@Source(type = 'http-service',
         receiver.url='http://0.0.0.0:7370/location',
         basic.auth.enabled='false',
-        @map(type='json'))
-define stream LocationStream (location1 string, location2 string);
+        source.id = "location", 
+	@map(type = 'json', 
+		@attributes(location1 = "$.event.location1", messageId = "trp:messageId", location2 = "$.event.location2")))
+define stream LocationStream (messageId string, location1 string, location2 string);
+
+@sink(type = 'http-service-response', source.id = "location", message.id = "{{messageId}}", 
+	@map(type = 'json'))
+define stream LocationResponseStream (messageId string, origin string, destination string, time string, date string);
 
 @sink(type='log')
 define stream LocationLog (location string);
@@ -16,6 +22,13 @@ define stream RejseplanenAPI(location string);
 
 @source(type = 'http-response', sink.id='rejseplanenAPI', @map(type='json', enclosing.element='$', @attributes(firstResult = 'LocationList.StopLocation[0].id')))
 define stream RejseplanenResponse(firstResult string);
+
+@sink(type='http-request', sink.id='rejseplanenAPI2', publisher.url='http://xmlopen.rejseplanen.dk/bin/rest.exe/location?input={{location}}&format=json', method='GET',@map(type='json'))
+define stream RejseplanenAPI2(location string);
+
+@source(type = 'http-response', sink.id='rejseplanenAPI2', @map(type='json', enclosing.element='$', @attributes(firstResult = 'LocationList.StopLocation[0].id')))
+define stream RejseplanenResponse2(firstResult string);
+
 
 @sink(type='http-request', sink.id='Journey', publisher.url='http://xmlopen.rejseplanen.dk/bin/rest.exe/departureBoard?id={{originId}}&direction={{destinationId}}&useTog=1&useBus=0&useMetro=0&format=json', method='GET',@map(type='json'))
 define stream JourneyStream(originId string, destinationId string);
@@ -37,7 +50,7 @@ define stream RejseplanenLog(firstResult string);
 
 define table reservedDB(key string, reserved int, status string);
 
--- Count the incoming events
+/*
 @info(name='passThrough')
 from LocationStream
 select location1 as location
@@ -46,18 +59,24 @@ insert into LocationLog;
 from LocationStream
 select location2 as location
 insert into LocationLog;
+*/
 
 @info(name='query_name') 
 from LocationStream
 select location1 as location
 insert into RejseplanenAPI;
 
-from LocationStream
+from LocationStream #window.time(1 sec)
 select location2 as location
-insert into RejseplanenAPI;
+insert into RejseplanenAPI2;
 
 @info(name='Combine locations for Journey') 
-from every e1=RejseplanenResponse, e2=RejseplanenResponse
+from every e1=RejseplanenResponse, e2=RejseplanenResponse2
+select e1.firstResult as originId, e2.firstResult as destinationId
+insert into JourneyStream;
+
+@info(name='Combine locations for Journey Reversed') 
+from every e2=RejseplanenResponse2, e1=RejseplanenResponse
 select e1.firstResult as originId, e2.firstResult as destinationId
 insert into JourneyStream;
 
@@ -66,23 +85,25 @@ from RejseplanenResponse
 select firstResult as firstResult
 insert into RejseplanenLog;
 
-@info(name='JourneyLog')
-from JourneyResponse
-select *
-insert into JourneyLog;
-
+/*
 @info(name='ReserveJourney') 
 from JourneyResponse
 left outer join reservedDB
 on str:concat(stop, finalStop, time, date) == reservedDB.key
-select str:concat(stop, finalStop, time, date) as key, ifThenElse(reservedDB.reserved < 0, 1, 2) as reserved,
+select str:concat(stop, finalStop, time, date) as key, ifThenElse(reservedDB.reserved == 0, 1, 2) as reserved,
 ifThenElse(reservedDB.reserved >=4 , 'fully booked', 'seats available') as status
 update or insert into reservedDB
 set reservedDB.reserved = reserved
 on key;
-
+*/
+@info(name='LocationResponse') 
+from every ls=LocationStream, jr=JourneyResponse
+select ls.messageId as messageId, jr.stop as origin, jr.finalStop as destination, jr.time, jr.date
+insert into LocationResponseStream;
+/*
 @info(name='JourneyReserveLog') 
 from JourneyResponse as j join reservedDB as r
 on str:concat(j.stop, j.finalStop, j.time, j.date) == r.key
 select r.status as status, r.reserved as seats
 insert into JourneyReserveLog;
+'/
