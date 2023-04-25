@@ -18,17 +18,17 @@ define stream CheckTicketStream (messageId string, ticketId string);
 
 @sink(type = 'http-service-response', source.id = "checkTicket", message.id = "{{messageId}}", 
 	@map(type = 'json'))
-define stream CheckTicketResponseStream (messageId string, isValid string);
+define stream CheckTicketResponseStream (messageId string, isValid string, instanceID string);
 
 /* Checks ticket or rejsekort validity */
 @source(type = 'http-service', receiver.url = "http://0.0.0.0:7370/checkValid", source.id = "checkValid", 
 	@map(type = 'json', 
-		@attributes(cardId = "$.event.cardId", messageId = "trp:messageId", cardType = "$.event.cardType")))
-define stream CheckValid (messageId string, cardId string, cardType string);
+		@attributes(cardId = "$.event.cardId", messageId = "trp:messageId", cardType = "$.event.cardType", instanceID = "$.event.instanceID")))
+define stream CheckValid (messageId string, cardId string, cardType string, instanceID string);
 
 @sink(type = 'http-service-response', source.id = "checkValid", message.id = "{{messageId}}", 
 	@map(type = 'json'))
-define stream CheckValidResponseStream (messageId string, isValid bool);
+define stream CheckValidResponseStream (messageId string, isValid bool, instanceID string);
 
 /* DO NOT USE*/
 @source(type = 'http-service', receiver.url = "http://0.0.0.0:7370/checkIn", source.id = "checkIn", 
@@ -81,14 +81,14 @@ from CheckValid[cardType == 'ticket']
 left outer join ticketsDB
 on CheckValid.cardId == ticketsDB.id
 select 
-CheckValid.messageId, ifThenElse(ticketsDB.id is null, false , true) as isValid
+CheckValid.messageId, ifThenElse(ticketsDB.id is null, false , true) as isValid, CheckValid.instanceID as instanceID
 insert into CheckValidResponseStream;
 
 @info(name='CheckValid Rejsekort') 
 from CheckValid[cardType == 'rejsekort']
 join DB
 on CheckValid.cardId == DB.cardId
-select messageId, isCheckedIn as isValid
+select messageId, isCheckedIn as isValid, CheckValid.instanceID as instanceID
 insert into CheckValidResponseStream;
 
 
