@@ -93,7 +93,7 @@ from CheckValid[cardType == 'ticket']
 left outer join ticketsDB
 on CheckValid.cardId == ticketsDB.id
 select 
-CheckValid.messageId, (ticketsDB.id is null) as isValid, ifThenElse(ticketsDB.id is null, "invalid_ticket" , "valid_ticket") as messageName, CheckValid.instanceID as instanceID
+CheckValid.messageId, not (ticketsDB.id is null) as isValid, ifThenElse(ticketsDB.id is null, "invalid_ticket" , "valid_ticket") as messageName, CheckValid.instanceID as instanceID
 insert into CheckValidResponseStream;
 
 @info(name='CheckValid Rejsekort') 
