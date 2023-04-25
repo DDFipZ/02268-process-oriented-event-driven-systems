@@ -98,9 +98,9 @@ insert into CheckValidResponseStream;
 
 @info(name='CheckValid Rejsekort') 
 from CheckValid[cardType == 'rejsekort']
-join DB
+left outer join DB
 on CheckValid.cardId == DB.cardId
-select messageId, isCheckedIn as isValid, ifThenElse(isCheckedIn, "valid_ticket", "invalid_ticket") as messageName, CheckValid.instanceID as instanceID
+select messageId, isCheckedIn as isValid, ifThenElse(DB.cardId is null, "invalid_ticket" , ifThenElse(isCheckedIn, "valid_ticket", "invalid_ticket")) as messageName, CheckValid.instanceID as instanceID
 insert into CheckValidResponseStream;
 
 
