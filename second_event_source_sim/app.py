@@ -47,7 +47,7 @@ def temperature_generator():
 # implements a random number of new passengers until the capacity is reached
 def passengers_generator(curr_passengers):
     if curr_passengers < TRAIN_CAPACITY:
-        return curr_passengers + random.randint(1, min(10, TRAIN_CAPACITY - curr_passengers))
+        return curr_passengers + random.randint(5, min(10, TRAIN_CAPACITY - curr_passengers))
 
 
 # sets a cooldown interval between 1 and 6 minutes
@@ -69,34 +69,26 @@ def profiler():
 
 # updates the event with a different speed value
 def change_speed(event):
-    new_event = event
-    new_event['event_time'] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-    new_event['speed'] = speed_generator()
-    return new_event
+    event['speed'] = speed_generator()
+    return event
 
 
 # updates the event with a different temperature value
 def change_temperature(event):
-    new_event = event
-    new_event['event_time'] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-    new_event['brake_temp'] = temperature_generator()
-    return new_event
+    event['brake_temp'] = temperature_generator()
+    return event
 
 
 # updates the event with a different pressure value
 def change_pressure(event):
-    new_event = event
-    new_event['event_time'] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-    new_event['pressure'] = pressure_generator()
-    return new_event
+    event['pressure'] = pressure_generator()
+    return event
 
 
 # updates the event with a different passengers value
 def change_passengers(event):
-    new_event = event
-    new_event['event_time'] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-    new_event['passengers'] = passengers_generator()
-    return new_event
+    event['passengers'] = passengers_generator()
+    return event
 
 
 def main():
@@ -153,6 +145,9 @@ def main():
             passenger_init = curr_time
             passenger_timeout = interval_generator()
 
+        # update time stamp
+        train_event['event_time'] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+
         # post updated event
         r = requests.post(url=target_url, data=json.dumps(train_event), headers={"Content-Type": "application/json; "
                                                                                                  "charset=utf-8"})
@@ -161,13 +156,10 @@ def main():
             print("Post request failed.\n")
         print("Event sent successfully!\n")
 
-        # allow for input
-        user_text, timed_out = timedInput("")
+        # allow for input and wait 5 seconds
+        user_text, timed_out = timedInput("", timeout=10)
         if not timed_out and user_text == "stop":
             break
-
-        # wait 5 seconds
-        sleep(5)
 
     # set speed to 0 to represent trip end
     train_event["speed"] = 0
