@@ -46,7 +46,8 @@ def temperature_generator():
 # implements a random number of new passengers until the capacity is reached
 def passengers_generator(curr_passengers):
     if curr_passengers < TRAIN_CAPACITY:
-        return curr_passengers + random.randint(5, min(10, TRAIN_CAPACITY - curr_passengers))
+        return curr_passengers + random.randint(1, min(10, TRAIN_CAPACITY - curr_passengers))
+    return curr_passengers
 
 
 # sets a cooldown interval between 1 and 6 minutes
@@ -163,7 +164,8 @@ def main():
             f"timeouts monitor:\nspeed: {int(speed_init + (speed_timeout / speedup_factor) - curr_time)}\n"
             f"pressure: {int(pressure_init + (pressure_timeout / speedup_factor) - curr_time)}\n"
             f"temperature: {int(temperature_init + (temperature_timeout / speedup_factor) - curr_time)}\n"
-            f"passenger: {int(passenger_init + (passenger_timeout / speedup_factor) - curr_time)}\n")
+            f"passenger: {int(passenger_init + (passenger_timeout / speedup_factor) - curr_time)}\n"
+            f"\nspeedup factor: {speedup_factor}\n")
 
         if curr_time > speed_init + (speed_timeout / speedup_factor):
             train_event = change_speed(train_event)
@@ -193,15 +195,15 @@ def main():
             return 1
 
         # allow for input and wait 10 seconds
-        user_text, timed_out = timedInput("", timeout=(10/speedup_factor))
+        user_text, timed_out = timedInput("", timeout=(max(1, 10/speedup_factor)))
 
         # make timeouts go faster
-        if not timed_out and user_text == "fast":
-            speedup_factor = 10
+        if not timed_out and (user_text == "fast" or user_text == "+") and speedup_factor < 100:
+            speedup_factor = speedup_factor * 10
 
         # reset timeout speed to default
-        if not timed_out and user_text == "slow":
-            speedup_factor = 1
+        if not timed_out and (user_text == "slow" or user_text == "-") and speedup_factor > 1:
+            speedup_factor = speedup_factor / 10
 
         # trigger end event
         if not timed_out and user_text == "stop":
