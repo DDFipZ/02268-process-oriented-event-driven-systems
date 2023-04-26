@@ -1,7 +1,6 @@
 import json
 import sys
-from time import time, sleep
-from datetime import datetime
+from time import time
 import random
 import requests
 from pytimedinput import timedInput
@@ -66,6 +65,28 @@ def profiler():
     }
 
 
+# event with all attributes set to one to indicate trip start
+def start_event():
+    return {
+        'train_id': f'{CURRENT_TRAIN}',
+        'speed': 1,
+        'pressure': 1,
+        'brake_temp': 1,
+        'passengers': 1
+    }
+
+
+# event with all attributes set to zero to indicate trip end
+def end_event():
+    return {
+        'train_id': f'{CURRENT_TRAIN}',
+        'speed': 0,
+        'pressure': 0,
+        'brake_temp': 0,
+        'passengers': 0
+    }
+
+
 # updates the event with a different speed value
 def change_speed(event):
     event['speed'] = speed_generator()
@@ -90,23 +111,35 @@ def change_passengers(event):
     return event
 
 
+# post request with event data do siddhi event processor
+def publish_event(event):
+    # post updated event
+    r = requests.post(url=target_url, data=json.dumps(event), headers={"Content-Type": "application/json; "
+                                                                                       "charset=utf-8"})
+    # check response
+    if r.status_code == 200:
+        return True
+    return False
+
+
 def main():
     # start trip
     s = input("Enter any input to start trip.\n")
     if s is None or s == "stop":
         sys.exit("Canceled start")
 
-    # initialize train event
+    train_event = start_event()
+    status = publish_event(train_event)
+    if status == 0:
+        print("Exiting program due to post request error.\n")
+        return 1
+
+    # initialize train event stream
     train_event = profiler()
-
-    # send event
-    r = requests.post(url=target_url, data=json.dumps(train_event), headers={"Content-Type": "application/json; "
-                                                                                             "charset=utf-8"})
-
-    # check response
-    if r.status_code != 200:
-        print("Post request failed.\n")
-    print("Event sent successfully!\n")
+    status = publish_event(train_event)
+    if status == 0:
+        print("Exiting program due to post request error.\n")
+        return 1
 
     # initialize timers
     speed_init = time()
@@ -119,55 +152,71 @@ def main():
     passenger_timeout = interval_generator()
     temperature_timeout = interval_generator()
 
+    # initialize speedup factor
+    speedup_factor = 1
+
     # continuously change values based on probabilities and time intervals, and consequent post request
-    while True:
+    while status is True:
         # save current time and check all timers
         curr_time = time()
-        print(f"timeouts monitor:\nspeed: {int(speed_init+speed_timeout-curr_time)}\npressure: {int(pressure_init+pressure_timeout-curr_time)}\ntemperature: {int(temperature_init+temperature_timeout-curr_time)}\npassenger: {int(passenger_init+passenger_timeout-curr_time)}\n")
-        if curr_time > speed_init + speed_timeout:
+        print(
+            f"timeouts monitor:\nspeed: {int(speed_init + (speed_timeout / speedup_factor) - curr_time)}\n"
+            f"pressure: {int(pressure_init + (pressure_timeout / speedup_factor) - curr_time)}\n"
+            f"temperature: {int(temperature_init + (temperature_timeout / speedup_factor) - curr_time)}\n"
+            f"passenger: {int(passenger_init + (passenger_timeout / speedup_factor) - curr_time)}\n")
+
+        if curr_time > speed_init + (speed_timeout / speedup_factor):
             train_event = change_speed(train_event)
             speed_init = curr_time
             speed_timeout = interval_generator()
 
-        if curr_time > pressure_init + pressure_timeout:
+        if curr_time > pressure_init + (pressure_timeout / speedup_factor):
             train_event = change_pressure(train_event)
             pressure_init = curr_time
             pressure_timeout = interval_generator()
 
-        if curr_time > temperature_init + temperature_timeout:
+        if curr_time > temperature_init + (temperature_timeout / speedup_factor):
             train_event = change_temperature(train_event)
             temperature_init = curr_time
             temperature_timeout = interval_generator()
 
-        if curr_time > passenger_init + passenger_timeout:
+        if curr_time > passenger_init + (passenger_timeout / speedup_factor):
             train_event = change_passengers(train_event)
             passenger_init = curr_time
             passenger_timeout = interval_generator()
 
         print(train_event)
-        # post updated event
-        r = requests.post(url=target_url, data=json.dumps(train_event), headers={"Content-Type": "application/json; "
-                                                                                                 "charset=utf-8"})
-        # check response
-        if r.status_code != 200:
-            print("Post request failed.\n")
-        print("Event sent successfully!\n")
+
+        status = publish_event(train_event)
+        if status == 0:
+            print("Exiting program due to post request error.\n")
+            return 1
 
         # allow for input and wait 10 seconds
-        user_text, timed_out = timedInput("", timeout=10)
+        user_text, timed_out = timedInput("", timeout=(10/speedup_factor))
+
+        # make timeouts go faster
+        if not timed_out and user_text == "fast":
+            speedup_factor = 10
+
+        # reset timeout speed to default
+        if not timed_out and user_text == "slow":
+            speedup_factor = 1
+
+        # trigger end event
         if not timed_out and user_text == "stop":
             break
 
-    # set speed to 0 to represent trip end
-    train_event["speed"] = 0
+    # trip end event
+    train_event = end_event()
 
-    # post updated event
-    r = requests.post(url=target_url, data=json.dumps(train_event), headers={"Content-Type": "application/json; "
-                                                                                             "charset=utf-8"})
-    # check response
-    if r.status_code != 200:
-        print("Post request failed.\n")
-    print("Event sent successfully!\n")
+    status = publish_event(train_event)
+    if status == 0:
+        print("Exiting program due to post request error.\n")
+        return 1
+
+    # program ran correctly
+    return 0
 
 
 if __name__ == '__main__':
