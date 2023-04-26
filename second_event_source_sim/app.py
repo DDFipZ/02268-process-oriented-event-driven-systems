@@ -58,7 +58,6 @@ def interval_generator():
 # initializes the event
 def profiler():
     return {
-        'event_time': datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
         'train_id': f'{CURRENT_TRAIN}',
         'speed': random.randint(40, 150),
         'pressure': random.randint(65, 75),
@@ -87,7 +86,7 @@ def change_pressure(event):
 
 # updates the event with a different passengers value
 def change_passengers(event):
-    event['passengers'] = passengers_generator()
+    event['passengers'] = passengers_generator(event['passengers'])
     return event
 
 
@@ -124,30 +123,28 @@ def main():
     while True:
         # save current time and check all timers
         curr_time = time()
-
+        print(f"timeouts monitor:\nspeed: {int(speed_init+speed_timeout-curr_time)}\npressure: {int(pressure_init+pressure_timeout-curr_time)}\ntemperature: {int(temperature_init+temperature_timeout-curr_time)}\npassenger: {int(passenger_init+passenger_timeout-curr_time)}\n")
         if curr_time > speed_init + speed_timeout:
-            train_event = speed_generator(train_event)
+            train_event = change_speed(train_event)
             speed_init = curr_time
             speed_timeout = interval_generator()
 
         if curr_time > pressure_init + pressure_timeout:
-            train_event = pressure_generator(train_event)
+            train_event = change_pressure(train_event)
             pressure_init = curr_time
             pressure_timeout = interval_generator()
 
         if curr_time > temperature_init + temperature_timeout:
-            train_event = temperature_generator(train_event)
+            train_event = change_temperature(train_event)
             temperature_init = curr_time
             temperature_timeout = interval_generator()
 
         if curr_time > passenger_init + passenger_timeout:
-            train_event = passengers_generator(train_event)
+            train_event = change_passengers(train_event)
             passenger_init = curr_time
             passenger_timeout = interval_generator()
 
-        # update time stamp
-        train_event['event_time'] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-
+        print(train_event)
         # post updated event
         r = requests.post(url=target_url, data=json.dumps(train_event), headers={"Content-Type": "application/json; "
                                                                                                  "charset=utf-8"})
@@ -156,7 +153,7 @@ def main():
             print("Post request failed.\n")
         print("Event sent successfully!\n")
 
-        # allow for input and wait 5 seconds
+        # allow for input and wait 10 seconds
         user_text, timed_out = timedInput("", timeout=10)
         if not timed_out and user_text == "stop":
             break
