@@ -10,30 +10,14 @@
         "columns": null
       },
       "id": "Field_0naxsdl",
-      "key": "field_1bqwruf",
+      "key": "time",
       "timeLabel": "Time",
       "timeSerializingFormat": "utc_offset",
       "timeInterval": 1,
       "use24h": true,
       "validate": {
-        "required": false
+        "required": true
       }
-    },
-    {
-      "subtype": "datetime",
-      "dateLabel": "Arrive by",
-      "label": "Date time",
-      "type": "datetime",
-      "layout": {
-        "row": "Row_1v59cn0",
-        "columns": null
-      },
-      "id": "Field_1b8s3nv",
-      "key": "field_0qpa799",
-      "timeLabel": "Time",
-      "timeSerializingFormat": "utc_offset",
-      "timeInterval": 1,
-      "use24h": true
     },
     {
       "values": [
@@ -69,7 +53,7 @@
         "columns": null
       },
       "id": "Field_1b91b0h",
-      "key": "field_0gqat80",
+      "key": "start",
       "searchable": true,
       "validate": {
         "required": true
@@ -113,7 +97,7 @@
         "columns": null
       },
       "id": "Field_17xoxdc",
-      "key": "field_0uem7tj",
+      "key": "end",
       "validate": {
         "required": true
       },
@@ -123,11 +107,11 @@
       "label": "Number",
       "type": "number",
       "layout": {
-        "row": null,
+        "row": "Row_1f5cbzv",
         "columns": 4
       },
       "id": "Field_1hx2usd",
-      "key": "field_0ampc4y",
+      "key": "num",
       "defaultValue": 1,
       "decimalDigits": 0,
       "increment": "1",
