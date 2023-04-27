@@ -1,0 +1,150 @@
+{
+  "components": [
+    {
+      "subtype": "datetime",
+      "dateLabel": "Departure by",
+      "label": "Date time",
+      "type": "datetime",
+      "layout": {
+        "row": "Row_0gunobk",
+        "columns": null
+      },
+      "id": "Field_0naxsdl",
+      "key": "field_1bqwruf",
+      "timeLabel": "Time",
+      "timeSerializingFormat": "utc_offset",
+      "timeInterval": 1,
+      "use24h": true,
+      "validate": {
+        "required": false
+      }
+    },
+    {
+      "subtype": "datetime",
+      "dateLabel": "Arrive by",
+      "label": "Date time",
+      "type": "datetime",
+      "layout": {
+        "row": "Row_1v59cn0",
+        "columns": null
+      },
+      "id": "Field_1b8s3nv",
+      "key": "field_0qpa799",
+      "timeLabel": "Time",
+      "timeSerializingFormat": "utc_offset",
+      "timeInterval": 1,
+      "use24h": true
+    },
+    {
+      "values": [
+        {
+          "label": "Value",
+          "value": "value"
+        },
+        {
+          "label": "Value 2",
+          "value": "value2"
+        },
+        {
+          "label": "Value 3",
+          "value": "value3"
+        },
+        {
+          "label": "Value 4",
+          "value": "value4"
+        },
+        {
+          "label": "Value 5",
+          "value": "value5"
+        },
+        {
+          "label": "Value 6",
+          "value": "value6"
+        }
+      ],
+      "label": "From",
+      "type": "select",
+      "layout": {
+        "row": "Row_18j5jgf",
+        "columns": null
+      },
+      "id": "Field_1b91b0h",
+      "key": "field_0gqat80",
+      "searchable": true,
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "values": [
+        {
+          "label": "Value",
+          "value": "value"
+        },
+        {
+          "label": "Value 2",
+          "value": "value2"
+        },
+        {
+          "label": "Value 3",
+          "value": "value3"
+        },
+        {
+          "label": "Value 4",
+          "value": "value4"
+        },
+        {
+          "label": "Value 5",
+          "value": "value5"
+        },
+        {
+          "label": "Value 6",
+          "value": "value6"
+        },
+        {
+          "label": "Value 7",
+          "value": "value7"
+        }
+      ],
+      "label": "To",
+      "type": "select",
+      "layout": {
+        "row": "Row_0h3tq74",
+        "columns": null
+      },
+      "id": "Field_17xoxdc",
+      "key": "field_0uem7tj",
+      "validate": {
+        "required": true
+      },
+      "properties": {}
+    },
+    {
+      "label": "Number",
+      "type": "number",
+      "layout": {
+        "row": null,
+        "columns": 4
+      },
+      "id": "Field_1hx2usd",
+      "key": "field_0ampc4y",
+      "defaultValue": 1,
+      "decimalDigits": 0,
+      "increment": "1",
+      "validate": {
+        "required": true,
+        "min": 1,
+        "max": 100
+      }
+    }
+  ],
+  "type": "default",
+  "id": "Form_1tt3hex",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.10.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.19.0",
+  "schemaVersion": 8
+}

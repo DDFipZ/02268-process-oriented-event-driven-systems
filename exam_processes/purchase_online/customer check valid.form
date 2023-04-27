@@ -1,0 +1,33 @@
+{
+  "components": [
+    {
+      "values": [
+        {
+          "label": "Yes",
+          "value": "yes"
+        },
+        {
+          "label": "No",
+          "value": "no"
+        }
+      ],
+      "label": "Customers check if they already have valid tickets",
+      "type": "radio",
+      "layout": {
+        "row": "Row_1nouvm5",
+        "columns": null
+      },
+      "id": "Field_0x55y03",
+      "key": "Valid"
+    }
+  ],
+  "type": "default",
+  "id": "Form_10mg4ow",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.10.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.19.0",
+  "schemaVersion": 8
+}
