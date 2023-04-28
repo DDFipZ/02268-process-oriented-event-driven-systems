@@ -126,10 +126,6 @@
     <bpmn:endEvent id="Event_0r8l2em" name="Completed">
       <bpmn:incoming>Flow_1gp6z7o</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:serviceTask id="Activity_1rje3w2" name="Send the completed message and order number to the customer&#39;s email address">
-      <bpmn:incoming>Flow_0rcqw8v</bpmn:incoming>
-      <bpmn:outgoing>Flow_1gp6z7o</bpmn:outgoing>
-    </bpmn:serviceTask>
     <bpmn:boundaryEvent id="Event_1miby1d" attachedToRef="Activity_1cwd10x">
       <bpmn:outgoing>Flow_02u32n5</bpmn:outgoing>
       <bpmn:errorEventDefinition id="ErrorEventDefinition_1nqemlh" errorRef="Error_05bdlst" />
@@ -146,8 +142,12 @@
     </bpmn:boundaryEvent>
     <bpmn:sequenceFlow id="Flow_0wknwxg" sourceRef="StartEvent_1" targetRef="Activity_0w9zu2s" />
     <bpmn:sequenceFlow id="Flow_10alzt4" sourceRef="Activity_0w9zu2s" targetRef="Gateway_17l55ee" />
-    <bpmn:sequenceFlow id="Flow_12nl9qu" name="Yes" sourceRef="Gateway_17l55ee" targetRef="Event_190gkgq" />
-    <bpmn:sequenceFlow id="Flow_0upcgnp" name="No" sourceRef="Gateway_17l55ee" targetRef="Activity_0128a8v" />
+    <bpmn:sequenceFlow id="Flow_12nl9qu" name="Yes" sourceRef="Gateway_17l55ee" targetRef="Event_190gkgq">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Valid = "yes"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0upcgnp" name="No" sourceRef="Gateway_17l55ee" targetRef="Activity_0128a8v">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Valid = "no"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_0omfi94" sourceRef="Activity_0128a8v" targetRef="Activity_1cwd10x" />
     <bpmn:sequenceFlow id="Flow_1c5maku" sourceRef="Activity_1cwd10x" targetRef="Activity_1xzafgu" />
     <bpmn:sequenceFlow id="Flow_02u32n5" sourceRef="Event_1miby1d" targetRef="Event_1xv4pw1" />
@@ -157,6 +157,10 @@
     <bpmn:sequenceFlow id="Flow_1y44fx4" sourceRef="Event_0s5r6sw" targetRef="Activity_1u6bzqs" />
     <bpmn:sequenceFlow id="Flow_0rcqw8v" sourceRef="Activity_1u6bzqs" targetRef="Activity_1rje3w2" />
     <bpmn:sequenceFlow id="Flow_1gp6z7o" sourceRef="Activity_1rje3w2" targetRef="Event_0r8l2em" />
+    <bpmn:task id="Activity_1rje3w2" name="Send the completed message and order number to the customer&#39;s email address">
+      <bpmn:incoming>Flow_0rcqw8v</bpmn:incoming>
+      <bpmn:outgoing>Flow_1gp6z7o</bpmn:outgoing>
+    </bpmn:task>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1fly6yd">
@@ -214,17 +218,17 @@
           <dc:Bounds x="1553" y="405" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_073vayz_di" bpmnElement="Activity_1rje3w2">
+      <bpmndi:BPMNShape id="Activity_12cyccf_di" bpmnElement="Activity_1rje3w2">
         <dc:Bounds x="1400" y="340" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1om4ky9_di" bpmnElement="Event_1miby1d">
-        <dc:Bounds x="772" y="402" width="36" height="36" />
+      <bpmndi:BPMNShape id="Event_0ou116y_di" bpmnElement="Event_0s5r6sw">
+        <dc:Bounds x="1292" y="402" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0atgyvp_di" bpmnElement="Event_0fhh1qx">
         <dc:Bounds x="1122" y="402" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0ou116y_di" bpmnElement="Event_0s5r6sw">
-        <dc:Bounds x="1292" y="402" width="36" height="36" />
+      <bpmndi:BPMNShape id="Event_1om4ky9_di" bpmnElement="Event_1miby1d">
+        <dc:Bounds x="772" y="402" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_0wknwxg_di" bpmnElement="Flow_0wknwxg">
         <di:waypoint x="215" y="227" />
