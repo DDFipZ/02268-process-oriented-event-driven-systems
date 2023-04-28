@@ -1,22 +1,18 @@
 {
   "components": [
     {
-      "subtype": "datetime",
-      "dateLabel": "Departure by",
-      "label": "Date time",
-      "type": "datetime",
+      "label": "time",
+      "type": "textfield",
       "layout": {
-        "row": "Row_0gunobk",
+        "row": "Row_1jdqcp0",
         "columns": null
       },
-      "id": "Field_0naxsdl",
+      "id": "Field_14jno1s",
       "key": "time",
-      "timeLabel": "Time",
-      "timeSerializingFormat": "utc_offset",
-      "timeInterval": 1,
-      "use24h": true,
       "validate": {
-        "required": true
+        "required": true,
+        "minLength": 5,
+        "maxLength": 5
       }
     },
     {
@@ -54,7 +50,7 @@
       },
       "id": "Field_1b91b0h",
       "key": "start",
-      "searchable": true,
+      "searchable": false,
       "validate": {
         "required": true
       }
@@ -113,8 +109,6 @@
       "id": "Field_1hx2usd",
       "key": "num",
       "defaultValue": 1,
-      "decimalDigits": 0,
-      "increment": "1",
       "validate": {
         "required": true,
         "min": 1,
