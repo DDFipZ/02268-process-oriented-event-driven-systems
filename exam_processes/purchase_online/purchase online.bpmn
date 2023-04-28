@@ -143,10 +143,10 @@
     <bpmn:sequenceFlow id="Flow_0wknwxg" sourceRef="StartEvent_1" targetRef="Activity_0w9zu2s" />
     <bpmn:sequenceFlow id="Flow_10alzt4" sourceRef="Activity_0w9zu2s" targetRef="Gateway_17l55ee" />
     <bpmn:sequenceFlow id="Flow_12nl9qu" name="Yes" sourceRef="Gateway_17l55ee" targetRef="Event_190gkgq">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Valid = "yes"</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${Valid=="yes"}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_0upcgnp" name="No" sourceRef="Gateway_17l55ee" targetRef="Activity_0128a8v">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Valid = "no"</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${Valid=="no"}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_0omfi94" sourceRef="Activity_0128a8v" targetRef="Activity_1cwd10x" />
     <bpmn:sequenceFlow id="Flow_1c5maku" sourceRef="Activity_1cwd10x" targetRef="Activity_1xzafgu" />
