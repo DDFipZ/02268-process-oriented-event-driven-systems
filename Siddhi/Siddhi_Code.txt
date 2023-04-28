@@ -49,6 +49,67 @@ define stream CheckValid (messageId string, cardId string, cardType string, inst
 define stream CheckValidResponseStream (messageId string, messageName string, instanceID string);
 
 /*
+ Purchase online*/
+@source(type='http-service', receiver.url='http://0.0.0.0:7370/reserveTicket', source.id='reserveTicket',
+    @map(type='json',
+        @attributes(messageId='trp:messageId', time='$.event.time', start='$.event.start', end='$.event.end', num='$.event.num', instanceID='$.event.instanceID')
+    )
+)
+define stream reserveTicketStream (messageId string, time string, start string, end string, num string, instanceID string);
+
+@sink(type='http-service-response', http.status.code='200', source.id='reserveTicket', message.id='{{messageId}}',
+    @map(type='json',
+        @attributes(messageId='{{messageId}}', order_number='{{instanceID}}')
+    )
+)
+define stream CreateTicketorderStream (
+    messageId string,
+    order_number string
+);
+
+
+@source(type='http-service', receiver.url='http://0.0.0.0:7370/issue', source.id='issue',
+    @map(type='json',
+        @attributes(messageId='trp:messageId', order_number='$.event.order_number', instanceID='$.event.instanceID')
+    )
+)
+define stream issueTicketStream (messageId string, order_number string, instanceID string);
+
+@sink(type='http-service-response', http.status.code='200', source.id='issue', message.id='{{messageId}}',
+    @map(type='json',
+        @attributes(messageId='{{messageId}}', order_number='{{instanceID}}')
+    )
+)
+define stream issueTicketstatusStream (
+    messageId string,
+    order_number string
+);
+
+
+
+
+define table TicketReservationTable (
+    time string,
+    start string,
+    end string,
+    num string,
+    instanceID string,
+    status string
+);
+
+@info(name='insert into TicketReservationTable')
+from reserveTicketStream
+insert into TicketReservationTable
+select time, start, end, num, instanceID, 'pending' as status;
+
+@info(name='update TicketReservationTable')
+from issueTicketStream
+update TicketReservationTable
+on TicketReservationTable.instanceID == issueTicketStream.instanceID
+set status = 'completed';
+
+
+/*
  DO NOT USE*/
 
 @source(type = 'http-service', receiver.url = "http://0.0.0.0:7370/checkIn", source.id = "checkIn", 
