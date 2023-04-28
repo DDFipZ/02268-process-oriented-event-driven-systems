@@ -107,7 +107,32 @@ from issueTicketStream
 update TicketReservationTable
 on TicketReservationTable.instanceID == issueTicketStream.instanceID
 set status = 'completed';
+/*
+ Bank */
 
+@source(type = 'http-service', receiver.url = "http://0.0.0.0:7370/bank", source.id = "bank", 
+	@map(type = 'json', 
+		@attributes(order_number = "$.event.order_number", messageId = "trp:messageId", instanceID = "$.event.instanceID")))
+define stream requestpayment(order_number string, instanceID string,messageId string);
+
+@sink(type = 'http-service-response', source.id = "bank", message.id = "{{messageId}}", 
+	@map(type = 'json'))
+@sink(
+	type = 'http',
+	publisher.url = 'http://camunda:8080/engine-rest/message',
+	headers = "'Host:camunda:8080", 
+	method = 'POST',
+	@map(
+		type = 'json',
+		@payload("""{"messageName": "payment_complete", "processInstanceId": "{{instanceID}}"}""")))
+@sink(type = 'log',
+	@map(
+		type = 'json', 
+		@payload("""{"messageName": "payment_complete", "processInstanceId": "{{instanceID}}"}""")))
+define stream paymentResponseStream (messageId string, messageName string, instanceID string);
+
+
+/*
 
 /*
  DO NOT USE*/
