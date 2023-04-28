@@ -7,11 +7,10 @@
       <bpmn:outgoing>Flow_128ytw9</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_18y3wa4" messageRef="Message_3ch4ob6" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:sequenceFlow id="Flow_128ytw9" sourceRef="Event_1j9j18k" targetRef="Activity_0xf3j9c" />
+    <bpmn:sequenceFlow id="Flow_128ytw9" sourceRef="Event_1j9j18k" targetRef="Activity_18y1gki" />
     <bpmn:endEvent id="Event_1dfixp5">
-      <bpmn:incoming>Flow_19thw8c</bpmn:incoming>
+      <bpmn:incoming>Flow_0q87btj</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_19thw8c" sourceRef="Activity_0xf3j9c" targetRef="Event_1dfixp5" />
     <bpmn:serviceTask id="Activity_1ilwmw8" name="Arrange replacement bus(es)">
       <bpmn:extensionElements>
         <camunda:connector>
@@ -38,15 +37,6 @@
       <bpmn:incoming>Flow_18tesny</bpmn:incoming>
       <bpmn:outgoing>Flow_10na6gs</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:serviceTask id="Activity_0xf3j9c" name="Cancel replacement bus(es)">
-      <bpmn:extensionElements>
-        <camunda:connector>
-          <camunda:connectorId>http-connector</camunda:connectorId>
-        </camunda:connector>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_128ytw9</bpmn:incoming>
-      <bpmn:outgoing>Flow_19thw8c</bpmn:outgoing>
-    </bpmn:serviceTask>
     <bpmn:serviceTask id="Activity_06p9qk5" name="Inform customers of buses">
       <bpmn:extensionElements>
         <camunda:connector>
@@ -61,12 +51,12 @@
           <camunda:inputParameter name="method">POST</camunda:inputParameter>
           <camunda:inputParameter name="payload">{
     "instanceID": "${execution.getProcessInstanceId()}",
-    "message": "{{message}}"
+    "message": "Train is delayed. Replacement buses have been arranged. See more at rejseplanen.dk"
 }</camunda:inputParameter>
           <camunda:inputParameter name="url">http://siddhi:7370/information</camunda:inputParameter>
         </camunda:inputOutput>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_09ij39e</bpmn:incoming>
+      <bpmn:incoming>Flow_14ixaeu</bpmn:incoming>
       <bpmn:outgoing>Flow_03248i2</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:businessRuleTask id="Activity_0dldka8" name="Determine number of replacement buses needed" camunda:expression="${(delay &#62; 10) ? 2 : 1}" camunda:resultVariable="number_of_buses">
@@ -79,28 +69,7 @@
       <bpmn:outgoing>Flow_1b3ydg4</bpmn:outgoing>
     </bpmn:businessRuleTask>
     <bpmn:sequenceFlow id="Flow_152bhp5" sourceRef="Event_0bfrd7o" targetRef="Event_0pgredv" />
-    <bpmn:sequenceFlow id="Flow_1dloae2" sourceRef="Event_0pgredv" targetRef="Activity_0dldka8" />
-    <bpmn:startEvent id="Event_0bfrd7o">
-      <bpmn:extensionElements />
-      <bpmn:outgoing>Flow_152bhp5</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:intermediateCatchEvent id="Event_0pgredv" name="Train is delayed more than 5 minutes">
-      <bpmn:extensionElements />
-      <bpmn:incoming>Flow_152bhp5</bpmn:incoming>
-      <bpmn:outgoing>Flow_1dloae2</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_1vps76m" messageRef="Message_26q7gnf" />
-    </bpmn:intermediateCatchEvent>
-    <bpmn:sequenceFlow id="Flow_14ixaeu" sourceRef="Gateway_1ikwd1o" targetRef="Activity_1x7sf7t" />
-    <bpmn:businessRuleTask id="Activity_1x7sf7t" name="Generate message" camunda:expression="${&#34;Train is delayed. Replacement buses have been arranged. See more at rejseplanen.dk&#34;}" camunda:resultVariable="message">
-      <bpmn:extensionElements>
-        <camunda:inputOutput>
-          <camunda:inputParameter name="train_id">${trainID}</camunda:inputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_14ixaeu</bpmn:incoming>
-      <bpmn:outgoing>Flow_09ij39e</bpmn:outgoing>
-    </bpmn:businessRuleTask>
-    <bpmn:sequenceFlow id="Flow_09ij39e" sourceRef="Activity_1x7sf7t" targetRef="Activity_06p9qk5" />
+    <bpmn:sequenceFlow id="Flow_14ixaeu" sourceRef="Gateway_1ikwd1o" targetRef="Activity_06p9qk5" />
     <bpmn:sequenceFlow id="Flow_1b3ydg4" sourceRef="Activity_0dldka8" targetRef="Gateway_1ikwd1o" />
     <bpmn:parallelGateway id="Gateway_1ikwd1o">
       <bpmn:incoming>Flow_1b3ydg4</bpmn:incoming>
@@ -116,6 +85,43 @@
     </bpmn:parallelGateway>
     <bpmn:sequenceFlow id="Flow_03248i2" sourceRef="Activity_06p9qk5" targetRef="Gateway_0zcr6py" />
     <bpmn:sequenceFlow id="Flow_0kzbbcz" sourceRef="Gateway_0zcr6py" targetRef="Event_1j9j18k" />
+    <bpmn:intermediateCatchEvent id="Event_0pgredv" name="Train is delayed more than 5 minutes">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_152bhp5</bpmn:incoming>
+      <bpmn:outgoing>Flow_1dloae2</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1vps76m" messageRef="Message_26q7gnf" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1dloae2" sourceRef="Event_0pgredv" targetRef="Activity_0dldka8" />
+    <bpmn:startEvent id="Event_0bfrd7o">
+      <bpmn:extensionElements />
+      <bpmn:outgoing>Flow_152bhp5</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Activity_18y1gki" name="Cancel replacement bus(es)">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Content Type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="payload">{
+    "trainID": "${train_id}",
+    "instanceID": "${execution.getProcessInstanceId()}"
+}</camunda:inputParameter>
+            <camunda:inputParameter name="url">http://siddhi:7370/arrange-replacement-buses</camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="train_id">${trainID}</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_128ytw9</bpmn:incoming>
+      <bpmn:outgoing>Flow_0q87btj</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0q87btj" sourceRef="Activity_18y1gki" targetRef="Event_1dfixp5" />
   </bpmn:process>
   <bpmn:message id="Message_26q7gnf" name="train_is_delayed" />
   <bpmn:message id="Message_3ch4ob6" name="train_no_longer_delayed" />
@@ -136,33 +142,31 @@
           <dc:Bounds x="251" y="119" width="77" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1j9j18k_di" bpmnElement="Event_1j9j18k">
-        <dc:Bounds x="1002" y="82" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="983" y="125" width="74" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1jaq1i3_di" bpmnElement="Activity_0xf3j9c">
-        <dc:Bounds x="1100" y="60" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1dfixp5_di" bpmnElement="Event_1dfixp5">
-        <dc:Bounds x="1262" y="82" width="36" height="36" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_1e5x4yp_di" bpmnElement="Gateway_1ikwd1o">
         <dc:Bounds x="535" y="75" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0gxyqf6_di" bpmnElement="Activity_1x7sf7t">
-        <dc:Bounds x="630" y="60" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0lw38id_di" bpmnElement="Activity_1ilwmw8">
         <dc:Bounds x="630" y="180" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_1soc3em" bpmnElement="Activity_06p9qk5">
-        <dc:Bounds x="780" y="60" width="100" height="80" />
+        <dc:Bounds x="630" y="60" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0jm8eul_di" bpmnElement="Gateway_0zcr6py">
-        <dc:Bounds x="915" y="75" width="50" height="50" />
+        <dc:Bounds x="775" y="75" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1j9j18k_di" bpmnElement="Event_1j9j18k">
+        <dc:Bounds x="882" y="82" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="863" y="125" width="74" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1dfixp5_di" bpmnElement="Event_1dfixp5">
+        <dc:Bounds x="1132" y="82" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0eunlip" bpmnElement="Activity_18y1gki">
+        <dc:Bounds x="980" y="60" width="100" height="80" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_152bhp5_di" bpmnElement="Flow_152bhp5">
         <di:waypoint x="198" y="100" />
@@ -176,17 +180,9 @@
         <di:waypoint x="585" y="100" />
         <di:waypoint x="630" y="100" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_09ij39e_di" bpmnElement="Flow_09ij39e">
-        <di:waypoint x="730" y="100" />
-        <di:waypoint x="780" y="100" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_128ytw9_di" bpmnElement="Flow_128ytw9">
-        <di:waypoint x="1038" y="100" />
-        <di:waypoint x="1100" y="100" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_19thw8c_di" bpmnElement="Flow_19thw8c">
-        <di:waypoint x="1200" y="100" />
-        <di:waypoint x="1262" y="100" />
+        <di:waypoint x="918" y="100" />
+        <di:waypoint x="980" y="100" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1b3ydg4_di" bpmnElement="Flow_1b3ydg4">
         <di:waypoint x="490" y="100" />
@@ -199,16 +195,20 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_10na6gs_di" bpmnElement="Flow_10na6gs">
         <di:waypoint x="730" y="220" />
-        <di:waypoint x="940" y="220" />
-        <di:waypoint x="940" y="125" />
+        <di:waypoint x="800" y="220" />
+        <di:waypoint x="800" y="125" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_03248i2_di" bpmnElement="Flow_03248i2">
-        <di:waypoint x="880" y="100" />
-        <di:waypoint x="915" y="100" />
+        <di:waypoint x="730" y="100" />
+        <di:waypoint x="775" y="100" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0kzbbcz_di" bpmnElement="Flow_0kzbbcz">
-        <di:waypoint x="965" y="100" />
-        <di:waypoint x="1002" y="100" />
+        <di:waypoint x="825" y="100" />
+        <di:waypoint x="882" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0q87btj_di" bpmnElement="Flow_0q87btj">
+        <di:waypoint x="1080" y="100" />
+        <di:waypoint x="1132" y="100" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
