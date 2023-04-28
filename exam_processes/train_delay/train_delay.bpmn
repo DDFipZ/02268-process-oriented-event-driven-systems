@@ -91,7 +91,7 @@
       <bpmn:messageEventDefinition id="MessageEventDefinition_1vps76m" messageRef="Message_26q7gnf" />
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_14ixaeu" sourceRef="Gateway_1ikwd1o" targetRef="Activity_1x7sf7t" />
-    <bpmn:businessRuleTask id="Activity_1x7sf7t" name="Generate message" camunda:expression="${&#34;Train &#34; + train_id + &#34; is delayed. Replacement buses have been arranged. See more at rejseplanen.dk&#34;}" camunda:resultVariable="message">
+    <bpmn:businessRuleTask id="Activity_1x7sf7t" name="Generate message" camunda:expression="${&#34;Train is delayed. Replacement buses have been arranged. See more at rejseplanen.dk&#34;}" camunda:resultVariable="message">
       <bpmn:extensionElements>
         <camunda:inputOutput>
           <camunda:inputParameter name="train_id">${trainID}</camunda:inputParameter>

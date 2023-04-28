@@ -1,0 +1,167 @@
+@App:name("TrainDelay")
+@App:description("Description of the plan")
+
+@sink(
+	type = 'http-request',
+	sink.id = 'Message',
+	publisher.url = 'http://camunda:8080/engine-rest/message',
+	headers = "'Host:camunda:8080", 
+	method = 'POST',
+	on.error = 'log',
+	@map(
+		type = 'json',
+		@payload(
+		    """{
+                "messageName": "{{messageName}}",
+                "processVariables": {
+                    "trainID": {
+                        "value": "{{trainID}}",
+                        "type": "String"
+                    },
+                    "delay": {
+                        "value": {{delay}},
+                        "type": "Integer"
+                    }
+                }
+            }""")))
+@sink(
+    type = 'log',
+    @map(
+		type = 'json',
+		@payload(
+		    """{
+                "messageName": "{{messageName}}",
+                "processVariables": {
+                    "trainID": {
+                        "value": "{{trainID}}",
+                        "type": "String"
+                    },
+                    "delay": {
+                        "value": {{delay}},
+                        "type": "Integer"
+                    }
+                }
+            }""")))
+define stream MessageStream(messageName string, trainID string, delay int);
+
+
+/*@source(
+	type = 'http-response',
+	sink.id = 'Message'
+@sink(type = 'log')
+define stream MessageResponseStream(data string);*/
+
+
+@source(
+    type = 'http-service', 
+    source.id = 'arrange-replacement-buses',
+    receiver.url = "http://0.0.0.0:7370/arrange-replacement-buses", 
+	@map(
+	    type = 'json',
+	    @payload(
+	        """{
+	            "trainID": "{{trainID}}", 
+	            "numberOfBuses": "{{numberOfBuses}}", 
+	            "instanceID": "{{instanceID}}"
+	       }""")))
+@sink(
+    type='log',
+    @map(
+	    type = 'json',
+	    @payload(
+	        """{
+	            "trainID": "{{trainID}}", 
+	            "numberOfBuses": "{{numberOfBuses}}", 
+	            "instanceID": "{{instanceID}}"
+	       }""")))
+define stream ArrangeReplacementBusesStream(trainID string, numberOfBuses string, instanceID string);
+
+
+@source(
+    type = 'http-service', 
+    source.id = 'information',
+    receiver.url = "http://0.0.0.0:7370/information", 
+	@map(
+	    type = 'json',
+	    @payload(
+	        """{
+	            "instanceID": "{{instanceID}}",
+	            "message": "{{message}}"
+	       }""")))
+@sink(
+    type='log',
+    @map(
+	    type = 'json',
+	    @payload(
+	        """{
+	            "instanceID": "{{instanceID}}",
+	            "message": "{{message}}"
+	       }""")))
+define stream InformationStream(instanceID string, message string);
+
+
+define table replacementBusesDB(id string, trainID string);
+define table informationDB(date string, message string);
+
+
+-- Arrange replacement buses
+@info(name='ArrangeReplacementBuses')
+from ArrangeReplacementBusesStream
+select '1' as id, trainID
+insert into replacementBusesDB;
+
+-- Inform customers
+@info(name='Inform')
+from InformationStream
+select 'now' as date, message
+insert into informationDB;
+
+/* @sink(
+    type = 'http',
+    publisher.url = 'http://camunda:8080/engine-rest/message',
+    headers = "'Host:camunda:8080", 
+    ... */
+    
+/*@sink(type='log')
+define stream RejseplanenTrainDelayStream(trainID string, delay int);*/
+    
+
+/*@sink(
+    type = 'http', 
+    on.error='log',
+    publisher.url = 'http://camunda:8080/engine-rest/message',
+	headers = "Host:camunda:8080", 
+	method = 'POST',
+	@map(
+	    type = 'json',
+	    @payload("""{"messageName": "{{messageName}}", "instanceID": "{{instanceID}}", "trainID": "{{trainID}}", "delay": "{{delay}}"}""")
+	)
+)
+define stream TrainDelayStream(messageName string, instanceID string, trainID string, delay int);*/
+
+
+/*@source(
+    type = 'http', 
+    receiver.url = "http://0.0.0.0:7370/arrange-replacement-buses", 
+	@map(
+	    type = 'json',
+	    @payload("""{"trainID": "{{trainID}}", "numberOfBuses": "{{numberOfBuses}}", "instanceID": "{{instanceID}}"}""")
+    )
+)
+@sink(type='log')
+define stream ArrangeReplacementBusesStream(trainID string, numberOfBuses int, instanceID string);*/
+
+
+--define table replacementBusesDB(id string, trainID string);
+
+
+-- When train is delayed
+/*from RejseplanenTrainDelayStream[delay > 5]
+select 'train_is_delayed' as messageName, '0b4f1127-e33b-11ed-aa23-0242ac110003' as instanceID, trainID, delay --ifThenElse(delay >= 10, 2, 1) as numberOfBuses
+insert into TrainDelayStream;*/
+
+-- Arrange replacement buses
+/*@info(name='ArrangeReplacementBuses')
+from ArrangeReplacementBusesStream
+select '1' as id, trainID
+insert into replacementBusesDB*/
