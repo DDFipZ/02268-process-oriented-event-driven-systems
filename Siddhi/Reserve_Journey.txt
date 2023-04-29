@@ -1,56 +1,85 @@
-@App:name("TEST1")
+@App:name("ReserveJourney")
 
 @App:description("Description of the plan")
 
 @Source(type = 'http-service',
-        receiver.url='http://0.0.0.0:7370/location',
-        basic.auth.enabled='false',
-        source.id = "location", 
+	receiver.url = 'http://0.0.0.0:7370/location',
+	basic.auth.enabled = 'false',
+	source.id = "location", 
 	@map(type = 'json', 
-		@attributes(location1 = "$.event.location1", messageId = "trp:messageId", location2 = "$.event.location2")))
-define stream LocationStream (messageId string, location1 string, location2 string);
+		@attributes(location1 = "$.event.location1", messageId = "trp:messageId", location2 = "$.event.location2", time= "$.event.time", date = "$.event.date", instanceID = "$.event.instanceID")))
+define stream LocationStream (messageId string, location1 string, location2 string, time string, date string, instanceID string);
+
 
 @sink(type = 'http-service-response', source.id = "location", message.id = "{{messageId}}", 
 	@map(type = 'json'))
+@sink(
+	type = 'http',
+	publisher.url = 'http://camunda:8080/engine-rest/message',
+	headers = "'Host:camunda:8080", 
+	method = 'POST',
+	@map(
+		type = 'json',
+		@payload("""{"messageName": "{{messageName}}", "processInstanceId": "{{instanceID}}"}""")))
+@sink(type = 'log',
+	@map(
+		type = 'json', 
+		@payload("""{"messageName": "{{messageName}}", "processInstanceId": "{{instanceID}}"}""")))
+define stream LocationCamundaSink (messageId string, messageName string, instanceID string);
+/*
+@sink(type = 'http-service-response', source.id = "location", message.id = "{{messageId}}", 
+	@map(type = 'json'))
 define stream LocationResponseStream (messageId string, origin string, destination string, time string, date string);
-
-@sink(type='log')
+*/
+@sink(type = 'log')
 define stream LocationLog (location string);
 
-@sink(type='http-request', sink.id='rejseplanenAPI', publisher.url='http://xmlopen.rejseplanen.dk/bin/rest.exe/location?input={{location}}&format=json', method='GET',@map(type='json'))
+@sink(type = 'http-request', sink.id = 'rejseplanenAPI', publisher.url = 'http://xmlopen.rejseplanen.dk/bin/rest.exe/location?input={{location}}&format=json', method = 'GET', 
+	@map(type = 'json'))
 define stream RejseplanenAPI(location string);
 
-@source(type = 'http-response', sink.id='rejseplanenAPI', @map(type='json', enclosing.element='$', @attributes(firstResult = 'LocationList.StopLocation[0].id')))
+@source(type = 'http-response', sink.id = 'rejseplanenAPI', 
+	@map(type = 'json', enclosing.element = '$', 
+		@attributes(firstResult = 'LocationList.StopLocation[0].id')))
 define stream RejseplanenResponse(firstResult string);
 
-@sink(type='http-request', sink.id='rejseplanenAPI2', publisher.url='http://xmlopen.rejseplanen.dk/bin/rest.exe/location?input={{location}}&format=json', method='GET',@map(type='json'))
+@sink(type = 'http-request', sink.id = 'rejseplanenAPI2', publisher.url = 'http://xmlopen.rejseplanen.dk/bin/rest.exe/location?input={{location}}&format=json', method = 'GET', 
+	@map(type = 'json'))
 define stream RejseplanenAPI2(location string);
 
-@source(type = 'http-response', sink.id='rejseplanenAPI2', @map(type='json', enclosing.element='$', @attributes(firstResult = 'LocationList.StopLocation[0].id')))
+@source(type = 'http-response', sink.id = 'rejseplanenAPI2', 
+	@map(type = 'json', enclosing.element = '$', 
+		@attributes(firstResult = 'LocationList.StopLocation[0].id')))
 define stream RejseplanenResponse2(firstResult string);
 
+@sink(type = 'http-request', sink.id = 'Journey', publisher.url = 'http://xmlopen.rejseplanen.dk/bin/rest.exe/trip?originId={{originId}}&destId={{destinationId}}&date={{date}}&time={{time}}&useTog=1&useBus=0&useMetro=0&format=json', method = 'GET', 
+	@map(type = 'json'))
+define stream JourneyStream(originId string, destinationId string, time string, date string);
 
-@sink(type='http-request', sink.id='Journey', publisher.url='http://xmlopen.rejseplanen.dk/bin/rest.exe/trip?originId={{originId}}&destId={{destinationId}}&useTog=1&useBus=0&useMetro=0&format=json', method='GET',@map(type='json'))
-define stream JourneyStream(originId string, destinationId string);
-
-@source(type = 'http-response', sink.id='Journey', @map(type='json', enclosing.element='$', @attributes(stop = 'TripList.Trip[0].Leg.Origin.name', finalStop = 'TripList.Trip[0].Leg.Destination.name', time = 'TripList.Trip[0].Leg.Origin.time', date = 'TripList.Trip[0].Leg.Origin.date')))
+@source(type = 'http-response', sink.id = 'Journey', 
+	@map(type = 'json', enclosing.element = '$', 
+		@attributes(stop = 'TripList.Trip[0].Leg.Origin.name', finalStop = 'TripList.Trip[0].Leg.Destination.name', time = 'TripList.Trip[0].Leg.Origin.time', date = 'TripList.Trip[0].Leg.Origin.date')))
 define stream JourneyResponse(stop string, finalStop string, time string, date string);
 
-@sink(type='log') 
+@sink(type = 'log') 
 define stream JourneyLog(stop string, finalStop string, time string, date string);
 
-@sink(type='log') 
+@sink(type = 'log') 
 define stream JourneyReserve(status string);
 
-@sink(type='log')
+@sink(type = 'log')
 define stream JourneyReserveLog(status string, seats int);
 
-@sink(type='log') 
+@sink(type = 'log') 
 define stream RejseplanenLog(firstResult string);
+
+@sink(type='log') 
+define stream LocationResponseLog(messageId string, origin string, destination string, time string, date string);
 
 define table reservedDB(key string, reserved int, status string);
 
 /*
+
 @info(name='passThrough')
 from LocationStream
 select location1 as location
@@ -61,7 +90,7 @@ select location2 as location
 insert into LocationLog;
 */
 
-@info(name='query_name') 
+@info(name = 'query_name') 
 from LocationStream
 select location1 as location
 insert into RejseplanenAPI;
@@ -70,40 +99,49 @@ from LocationStream #window.time(1 sec)
 select location2 as location
 insert into RejseplanenAPI2;
 
-@info(name='Combine locations for Journey') 
-from every e1=RejseplanenResponse, e2=RejseplanenResponse2
-select e1.firstResult as originId, e2.firstResult as destinationId
+@info(name = 'Combine locations for Journey') 
+from every ls = LocationStream, e1 = RejseplanenResponse, e2 = RejseplanenResponse2
+select e1.firstResult as originId, e2.firstResult as destinationId, ls.time as time, ls.date as date
 insert into JourneyStream;
 
-@info(name='Combine locations for Journey Reversed') 
-from every e2=RejseplanenResponse2, e1=RejseplanenResponse
-select e1.firstResult as originId, e2.firstResult as destinationId
+@info(name = 'Combine locations for Journey Reversed') 
+from every ls = LocationStream, e2 = RejseplanenResponse2, e1 = RejseplanenResponse
+select e1.firstResult as originId, e2.firstResult as destinationId, ls.time as time, ls.date as date
 insert into JourneyStream;
 
-@info(name='query_nam1e')
+@info(name = 'query_nam1e')
 from RejseplanenResponse
 select firstResult as firstResult
 insert into RejseplanenLog;
 
-/*
-@info(name='ReserveJourney') 
+@info(name = 'LocationResponse') 
+from every ls = LocationStream, jr = JourneyResponse
+select ls.messageId as messageId, jr.stop as origin, jr.finalStop as destination, jr.time, jr.date
+insert into LocationResponseLog;
+
+@info(name = 'ReserveJourney') 
 from JourneyResponse
 left outer join reservedDB
-on str:concat(stop, finalStop, time, date) == reservedDB.key
-select str:concat(stop, finalStop, time, date) as key, ifThenElse(reservedDB.reserved == 0, 1, 2) as reserved,
-ifThenElse(reservedDB.reserved >=4 , 'fully booked', 'seats available') as status
-update or insert into reservedDB
+	on str:concat(stop, finalStop, time, date) == reservedDB.key
+select str:concat(stop, finalStop, time, date) as key, ifThenElse(reservedDB.key is null, 1, reservedDB.reserved + 1) as reserved, 
+'seats available' as status
+update or 
+insert into reservedDB
 set reservedDB.reserved = reserved
-on key;
-*/
-@info(name='LocationResponse') 
-from every ls=LocationStream, jr=JourneyResponse
-select ls.messageId as messageId, jr.stop as origin, jr.finalStop as destination, jr.time, jr.date
-insert into LocationResponseStream;
-/*
-@info(name='JourneyReserveLog') 
+	on reservedDB.key == key;
+
+@info(name = 'JourneyReserveLog') 
 from JourneyResponse as j join reservedDB as r
-on str:concat(j.stop, j.finalStop, j.time, j.date) == r.key
-select r.status as status, r.reserved as seats
+	on str:concat(j.stop, j.finalStop, j.time, j.date) == r.key
+select ifThenElse(r.reserved <= 5, 'ticket reserved', 'could not reserve ticket') as status, r.reserved as seats
 insert into JourneyReserveLog;
-'/
+
+@info(name = 'CombinedArms') 
+from JourneyResponse as j join reservedDB as r
+	on str:concat(j.stop, j.finalStop, j.time, j.date) == r.key
+select ifThenElse(r.reserved <= 5, 'yes_reservation', 'no_reservation') as status, r.reserved as seats
+insert into COMBINED_ARMS;
+
+from every ls = LocationStream, ca = COMBINED_ARMS
+select ls.messageId as messageId, status as messageName, ls.instanceID as instanceID
+insert into LocationCamundaSink;

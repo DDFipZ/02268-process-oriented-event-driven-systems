@@ -1,0 +1,37 @@
+{
+  "components": [
+    {
+      "label": "Origin",
+      "type": "textfield",
+      "id": "Field_0s4xsk6",
+      "key": "Origin"
+    },
+    {
+      "label": "Destination",
+      "type": "textfield",
+      "id": "Field_0akia0m",
+      "key": "Destination"
+    },
+    {
+      "label": "Time",
+      "type": "textfield",
+      "id": "Field_1nm931e",
+      "key": "Time"
+    },
+    {
+      "label": "Date",
+      "type": "textfield",
+      "id": "Field_1jbp3gr",
+      "key": "Date"
+    }
+  ],
+  "type": "default",
+  "id": "TripInfo",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.9.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.18.0",
+  "schemaVersion": 7
+}
