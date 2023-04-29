@@ -3,7 +3,7 @@
   <bpmn:process id="train_delay" name="Train Delay" isExecutable="true" camunda:historyTimeToLive="1">
     <bpmn:intermediateCatchEvent id="Event_1j9j18k" name="Train no longer delayed">
       <bpmn:extensionElements />
-      <bpmn:incoming>Flow_01ykd53</bpmn:incoming>
+      <bpmn:incoming>Flow_1x3lym4</bpmn:incoming>
       <bpmn:outgoing>Flow_128ytw9</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_18y3wa4" messageRef="Message_3ch4ob6" />
     </bpmn:intermediateCatchEvent>
@@ -36,28 +36,6 @@
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1e3bxsa</bpmn:incoming>
       <bpmn:outgoing>Flow_12gbd8u</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:serviceTask id="Activity_06p9qk5" name="Inform customers of buses">
-      <bpmn:extensionElements>
-        <camunda:connector>
-          <camunda:connectorId>http-connector</camunda:connectorId>
-        </camunda:connector>
-        <camunda:inputOutput>
-          <camunda:inputParameter name="headers">
-            <camunda:map>
-              <camunda:entry key="Content Type">application/json</camunda:entry>
-            </camunda:map>
-          </camunda:inputParameter>
-          <camunda:inputParameter name="method">POST</camunda:inputParameter>
-          <camunda:inputParameter name="payload">{
-    "instanceID": "${execution.getProcessInstanceId()}",
-    "message": "Train is delayed. Replacement buses have been arranged. See more at rejseplanen.dk"
-}</camunda:inputParameter>
-          <camunda:inputParameter name="url">http://siddhi:7370/information</camunda:inputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_12gbd8u</bpmn:incoming>
-      <bpmn:outgoing>Flow_01ykd53</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:businessRuleTask id="Activity_0dldka8" name="Determine number of replacement buses needed" camunda:expression="${(delay &#62; 10) ? 2 : 1}" camunda:resultVariable="number_of_buses">
       <bpmn:extensionElements>
@@ -106,29 +84,36 @@
       <bpmn:outgoing>Flow_0q87btj</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:sequenceFlow id="Flow_0q87btj" sourceRef="Activity_18y1gki" targetRef="Event_1dfixp5" />
-    <bpmn:sequenceFlow id="Flow_01ykd53" sourceRef="Activity_06p9qk5" targetRef="Event_1j9j18k" />
     <bpmn:sequenceFlow id="Flow_1e3bxsa" sourceRef="Activity_0dldka8" targetRef="Activity_1ilwmw8" />
-    <bpmn:sequenceFlow id="Flow_12gbd8u" sourceRef="Activity_1ilwmw8" targetRef="Activity_06p9qk5" />
+    <bpmn:sequenceFlow id="Flow_12gbd8u" sourceRef="Activity_1ilwmw8" targetRef="Activity_0u4ma33" />
+    <bpmn:serviceTask id="Activity_0u4ma33" name="Inform customers of buses">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Content Type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="payload">{
+    "instanceID": "${execution.getProcessInstanceId()}",
+    "message": "Train is delayed. Replacement buses have been arranged. See more at rejseplanen.dk"
+}</camunda:inputParameter>
+            <camunda:inputParameter name="url">http://siddhi:7370/information</camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_12gbd8u</bpmn:incoming>
+      <bpmn:outgoing>Flow_1x3lym4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1x3lym4" sourceRef="Activity_0u4ma33" targetRef="Event_1j9j18k" />
   </bpmn:process>
   <bpmn:message id="Message_26q7gnf" name="train_is_delayed" />
   <bpmn:message id="Message_3ch4ob6" name="train_no_longer_delayed" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="train_delay">
-      <bpmndi:BPMNShape id="Activity_10ecy13_di" bpmnElement="Activity_0dldka8">
-        <dc:Bounds x="390" y="60" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_10esnpt_di" bpmnElement="Event_0bfrd7o">
-        <dc:Bounds x="162" y="82" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="32" y="125" width="77" height="40" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_05jqq0d_di" bpmnElement="Event_0pgredv">
-        <dc:Bounds x="272" y="82" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="251" y="119" width="77" height="40" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1j9j18k_di" bpmnElement="Event_1j9j18k">
         <dc:Bounds x="882" y="82" width="36" height="36" />
         <bpmndi:BPMNLabel>
@@ -138,17 +123,36 @@
       <bpmndi:BPMNShape id="Event_1dfixp5_di" bpmnElement="Event_1dfixp5">
         <dc:Bounds x="1132" y="82" width="36" height="36" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0lw38id_di" bpmnElement="Activity_1ilwmw8">
+        <dc:Bounds x="560" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_10ecy13_di" bpmnElement="Activity_0dldka8">
+        <dc:Bounds x="390" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_05jqq0d_di" bpmnElement="Event_0pgredv">
+        <dc:Bounds x="272" y="82" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="251" y="119" width="77" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_10esnpt_di" bpmnElement="Event_0bfrd7o">
+        <dc:Bounds x="162" y="82" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="32" y="125" width="77" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_0eunlip" bpmnElement="Activity_18y1gki">
         <dc:Bounds x="980" y="60" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1soc3em" bpmnElement="Activity_06p9qk5">
+      <bpmndi:BPMNShape id="BPMNShape_055dkwx" bpmnElement="Activity_0u4ma33">
         <dc:Bounds x="720" y="60" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0lw38id_di" bpmnElement="Activity_1ilwmw8">
-        <dc:Bounds x="560" y="60" width="100" height="80" />
-      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_128ytw9_di" bpmnElement="Flow_128ytw9">
+        <di:waypoint x="918" y="100" />
+        <di:waypoint x="980" y="100" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_152bhp5_di" bpmnElement="Flow_152bhp5">
         <di:waypoint x="198" y="100" />
         <di:waypoint x="272" y="100" />
@@ -157,17 +161,9 @@
         <di:waypoint x="308" y="100" />
         <di:waypoint x="390" y="100" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_128ytw9_di" bpmnElement="Flow_128ytw9">
-        <di:waypoint x="918" y="100" />
-        <di:waypoint x="980" y="100" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0q87btj_di" bpmnElement="Flow_0q87btj">
         <di:waypoint x="1080" y="100" />
         <di:waypoint x="1132" y="100" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_01ykd53_di" bpmnElement="Flow_01ykd53">
-        <di:waypoint x="820" y="100" />
-        <di:waypoint x="882" y="100" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1e3bxsa_di" bpmnElement="Flow_1e3bxsa">
         <di:waypoint x="490" y="100" />
@@ -176,6 +172,10 @@
       <bpmndi:BPMNEdge id="Flow_12gbd8u_di" bpmnElement="Flow_12gbd8u">
         <di:waypoint x="660" y="100" />
         <di:waypoint x="720" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1x3lym4_di" bpmnElement="Flow_1x3lym4">
+        <di:waypoint x="820" y="100" />
+        <di:waypoint x="882" y="100" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
