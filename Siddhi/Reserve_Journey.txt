@@ -7,9 +7,31 @@
 	basic.auth.enabled = 'false',
 	source.id = "location", 
 	@map(type = 'json', 
-		@attributes(location1 = "$.event.location1", messageId = "trp:messageId", location2 = "$.event.location2", time= "$.event.time", date = "$.event.date", instanceID = "$.event.instanceID")))
+		@attributes(location1 = "$.event.location1", messageId = "trp:messageId", location2 = "$.event.location2", time = "$.event.time", date = "$.event.date", instanceID = "$.event.instanceID")))
 define stream LocationStream (messageId string, location1 string, location2 string, time string, date string, instanceID string);
 
+@source(type = 'http-service',
+    receiver.url = 'http://0.0.0.0:7370/capacity',
+    source.id ="capacity",
+    @map(type = 'json',
+    @attributes(messageId = "trp:messageId", instanceID = "$.event.instanceID")))
+define stream CapacityStream (messageId string, instanceID string);
+
+@sink(type = 'http-service-response', source.id = "capacity", message.id = "{{messageId}}", 
+	@map(type = 'json'))
+@sink(
+	type = 'http',
+	publisher.url = 'http://camunda:8080/engine-rest/message',
+	headers = "'Host:camunda:8080", 
+	method = 'POST',
+	@map(
+		type = 'json',
+		@payload("""{"messageName": "{{messageName}}", "processInstanceId": "{{instanceID}}"}""")))
+@sink(type = 'log',
+	@map(
+		type = 'json', 
+		@payload("""{"messageName": "{{messageName}}", "processInstanceId": "{{instanceID}}"}""")))
+define stream CapacityCamundaSink (messageId string, messageName string, instanceID string);
 
 @sink(type = 'http-service-response', source.id = "location", message.id = "{{messageId}}", 
 	@map(type = 'json'))
@@ -26,11 +48,11 @@ define stream LocationStream (messageId string, location1 string, location2 stri
 		type = 'json', 
 		@payload("""{"messageName": "{{messageName}}", "processInstanceId": "{{instanceID}}"}""")))
 define stream LocationCamundaSink (messageId string, messageName string, instanceID string);
-/*
+
 @sink(type = 'http-service-response', source.id = "location", message.id = "{{messageId}}", 
 	@map(type = 'json'))
 define stream LocationResponseStream (messageId string, origin string, destination string, time string, date string);
-*/
+
 @sink(type = 'log')
 define stream LocationLog (location string);
 
@@ -68,27 +90,23 @@ define stream JourneyLog(stop string, finalStop string, time string, date string
 define stream JourneyReserve(status string);
 
 @sink(type = 'log')
-define stream JourneyReserveLog(status string, seats int);
+define stream JourneyReserveLog(status string, seats int, capacity int, lastReserved int);
 
 @sink(type = 'log') 
 define stream RejseplanenLog(firstResult string);
 
-@sink(type='log') 
+@sink(type = 'log') 
 define stream LocationResponseLog(messageId string, origin string, destination string, time string, date string);
 
-define table reservedDB(key string, reserved int, status string);
+define trigger Frequency at every 1 minute;
 
-/*
+define table reservedDB(key string, reserved int, status string, capacity int, lastReserved int);
 
-@info(name='passThrough')
-from LocationStream
-select location1 as location
-insert into LocationLog;
-
-from LocationStream
-select location2 as location
-insert into LocationLog;
-*/
+@info(name = 'update-table') 
+from Frequency
+update reservedDB 
+set reservedDB.lastReserved = reservedDB.reserved
+	on true;
 
 @info(name = 'query_name') 
 from LocationStream
@@ -122,26 +140,36 @@ insert into LocationResponseLog;
 @info(name = 'ReserveJourney') 
 from JourneyResponse
 left outer join reservedDB
-	on str:concat(stop, finalStop, time, date) == reservedDB.key
+ 	on str:concat(stop, finalStop, time, date) == reservedDB.key
 select str:concat(stop, finalStop, time, date) as key, ifThenElse(reservedDB.key is null, 1, reservedDB.reserved + 1) as reserved, 
-'seats available' as status
+'seats available' as status, ifThenElse(reservedDB.key is null, 100, reservedDB.capacity) as capacity, ifThenElse(reservedDB.key is null, 1, reservedDB.lastReserved) as lastReserved
 update or 
 insert into reservedDB
 set reservedDB.reserved = reserved
-	on reservedDB.key == key;
+ 	on reservedDB.key == key;
 
 @info(name = 'JourneyReserveLog') 
 from JourneyResponse as j join reservedDB as r
-	on str:concat(j.stop, j.finalStop, j.time, j.date) == r.key
-select ifThenElse(r.reserved <= 5, 'ticket reserved', 'could not reserve ticket') as status, r.reserved as seats
+ 	on str:concat(j.stop, j.finalStop, j.time, j.date) == r.key
+select ifThenElse(r.reserved <= r.capacity, 'ticket reserved', 'could not reserve ticket') as status, r.reserved as seats, r.capacity as capacity, r.lastReserved as lastReserved
 insert into JourneyReserveLog;
 
 @info(name = 'CombinedArms') 
 from JourneyResponse as j join reservedDB as r
-	on str:concat(j.stop, j.finalStop, j.time, j.date) == r.key
-select ifThenElse(r.reserved <= 5, 'yes_reservation', 'no_reservation') as status, r.reserved as seats
+ 	on str:concat(j.stop, j.finalStop, j.time, j.date) == r.key
+select r.key as key, ifThenElse(r.reserved <= r.capacity, ifThenElse((r.reserved - r.lastReserved) > 5, 'more_capacity', 'yes_reservation'), 'no_reservation') as status, r.reserved as seats
 insert into COMBINED_ARMS;
 
 from every ls = LocationStream, ca = COMBINED_ARMS
 select ls.messageId as messageId, status as messageName, ls.instanceID as instanceID
 insert into LocationCamundaSink;
+
+from every ca = COMBINED_ARMS[status == 'more_capacity'], CapacityStream
+select ca.key as key
+update reservedDB 
+set reservedDB.capacity = reservedDB.capacity + 100, reservedDB.lastReserved = reservedDB.reserved
+	on reservedDB.key == key;
+	
+from CapacityStream
+select messageId as messageId, 'increased_capacity' as messageName, instanceID as instanceID
+insert into CapacityCamundaSink;
