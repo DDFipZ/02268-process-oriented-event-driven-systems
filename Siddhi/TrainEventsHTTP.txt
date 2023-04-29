@@ -1,0 +1,55 @@
+@App:name("TrainEventsHTTP")
+
+@App:description('Receive events via HTTP transport and view the output on the console')
+
+-- events from simulated train sensor network, refreshed around every 5 seconds
+@Source(type = 'http',
+        receiver.url='http://0.0.0.0:7370/train',
+        method='POST',
+        @map(type='json'))
+define stream TrainEventStream (train_id string, speed int, pressure int, brake_temp int, passengers int);
+
+@source(type='http', receiver.url="http://127.0.0.1:8081/camundaStream", method='POST', @map(type='json'))
+@sink(type='log')
+define stream CamundaInputStream(process_id string);
+
+@sink(type='http', publisher.url='http://127.0.0.1:8080/engine-rest/message', headers = "'Host:127.0.0.1:8080", @map(type="json", @payload("""{"messageName":"{{msg}}", "processInstanceId":"{{process_instance_id}}"}""")))
+define stream CamundaOutputStream(process_instance_id string, msg string);
+
+-- filter start_trip events
+from TrainEventStream [speed == 1 and pressure == 1 and brake_temp == 1 and passengers == 1] join CamundaInputStream
+select process_id as process_instance_id, "trip_start" as msg
+insert into CamundaOutputStream;
+
+-- filter end_trip events
+from TrainEventStream [speed == 0 and pressure == 0 and brake_temp == 0 and passengers == 0] join CamundaInputStream
+select process_id as process_instance_id, "trip_end" as msg
+insert into CamundaOutputStream;
+
+-- filter high_speed events
+-- if the moving average from the last 6 events (~30 seconds) is over the speed limit considered, trigger high_speed event
+from TrainEventStream#window.length(6) as t join CamundaInputStream as c
+select c.process_id as process_instance_id, ifThenElse(avg(t.speed) > 150, "high_speed", "no_issue") as msg 
+insert into CamundaOutputStream;
+
+
+--filter maintenance alerts
+-- sustained either high pressure or low pressure or high temperature (2 minute moving average) 
+from TrainEventStream#window.length(24) as t join CamundaInputStream as c
+select c.process_id as process_instance_id,
+       ifThenElse((((avg(t.pressure) > 75 AND avg(t.pressure) < 85) OR (avg(t.pressure) < 65 AND avg(t.pressure) > 55)) AND avg(t.brake_temp) < 700) OR (avg(t.pressure) >= 65 AND avg(t.pressure) <= 75 AND avg(t.brake_temp) >= 700 AND avg(t.brake_temp) <= 750) , "maintenance_required", "no_issue") as msg 
+insert into CamundaOutputStream;
+
+-- filter breakdown alert
+-- simultaineously have sustain pressure and temperature deficiencies or extreme temperature or pressure
+from TrainEventStream#window.length(24) as t join CamundaInputStream as c
+select c.process_id as process_instance_id,
+       ifThenElse((((avg(t.pressure) > 75 AND avg(t.pressure) < 85) OR (avg(t.pressure) < 65 AND avg(t.pressure) > 55)) AND avg(t.brake_temp) >= 700) OR avg(t.brake_temp) > 750 OR avg(t.pressure) < 55 OR avg(t.pressure) > 85, "breakdown_alert", "no_issue") as msg 
+insert into CamundaOutputStream;
+
+/*
+-- filter capacity exceeded events
+from TrainEventStream [passengers > 299] join CamundaInputStream
+select process_id as process_instance_id, "capacity_reached" as msg
+insert into CapacityCheckerStream;
+*/
