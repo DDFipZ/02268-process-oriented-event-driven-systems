@@ -1,0 +1,24 @@
+{
+  "components": [
+    {
+      "label": "BREAKDOWN ALERT, STOP IMMEDIATELLY!",
+      "type": "checkbox",
+      "layout": {
+        "row": "Row_0ajp5h7",
+        "columns": null
+      },
+      "id": "Field_1lli112",
+      "key": "field_1j2194n",
+      "description": "ALERT"
+    }
+  ],
+  "type": "default",
+  "id": "breakdown_alert",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.10.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.19.0",
+  "schemaVersion": 8
+}

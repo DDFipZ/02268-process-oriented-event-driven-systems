@@ -1,0 +1,24 @@
+{
+  "components": [
+    {
+      "label": "Maintenance is required!",
+      "type": "checkbox",
+      "layout": {
+        "row": "Row_0p2nyv1",
+        "columns": null
+      },
+      "id": "Field_0tnu85l",
+      "key": "field_1u2gdly",
+      "description": "WARNING"
+    }
+  ],
+  "type": "default",
+  "id": "maintenance_warning",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.10.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.19.0",
+  "schemaVersion": 8
+}

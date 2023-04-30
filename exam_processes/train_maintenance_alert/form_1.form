@@ -1,0 +1,24 @@
+{
+  "components": [
+    {
+      "label": "Speed too high, apply brakes!",
+      "type": "checkbox",
+      "layout": {
+        "row": "Row_06safu2",
+        "columns": null
+      },
+      "id": "Field_1mfluwm",
+      "key": "speed_warning",
+      "description": "WARNING"
+    }
+  ],
+  "type": "default",
+  "id": "speed_warning",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.10.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.19.0",
+  "schemaVersion": 8
+}
