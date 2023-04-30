@@ -195,7 +195,7 @@ def main():
             return 1
 
         # allow for input and wait 10 seconds
-        user_text, timed_out = timedInput("", timeout=(max(1, 10/speedup_factor)))
+        user_text, timed_out = timedInput("", timeout=(max(1, 5/speedup_factor)))
 
         # make timeouts go faster
         if not timed_out and (user_text == "fast" or user_text == "+") and speedup_factor < 100:
