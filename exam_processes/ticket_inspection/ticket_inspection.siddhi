@@ -1,4 +1,4 @@
-@App:name('TestTEST')
+@App:name('ticket_inspection')
 @App:description('Description of the plan')
 /*
  Create ticket creates a ticket in the database and returns status*/
@@ -11,18 +11,6 @@ define stream CreateTicketStream (messageId string, journey string, name string,
 @sink(type = 'http-service-response', source.id = "createTicket", message.id = "{{messageId}}", 
 	@map(type = 'json'))
 define stream CreatedTicketStatusStream (messageId string, journey string, name string, status string);
-
-/*
- NOT SUPPORTED Check ticket checks validity of ticket. The ID is the message ID given when creating a ticket */
-
-@source(type = 'http-service', receiver.url = "http://0.0.0.0:7370/checkTicket", source.id = "checkTicket", 
-	@map(type = 'json', 
-		@attributes(messageId = "trp:messageId", ticketId = "$.event.ticketId")))
-define stream CheckTicketStream (messageId string, ticketId string);
-
-@sink(type = 'http-service-response', source.id = "checkTicket", message.id = "{{messageId}}", 
-	@map(type = 'json'))
-define stream CheckTicketResponseStream (messageId string, isValid string, instanceID string);
 
 /*
  Checks ticket or rejsekort validity */
@@ -47,19 +35,6 @@ define stream CheckValid (messageId string, cardId string, cardType string, inst
 		type = 'json', 
 		@payload("""{"messageName": "{{messageName}}", "processInstanceId": "{{instanceID}}"}""")))
 define stream CheckValidResponseStream (messageId string, messageName string, instanceID string);
-
-
-/*
- DO NOT USE*/
-
-@source(type = 'http-service', receiver.url = "http://0.0.0.0:7370/checkIn", source.id = "checkIn", 
-	@map(type = 'json', 
-		@attributes(cardId = "$.event.cardId", messageId = "trp:messageId", cardType = "$.event.cardType")))
-define stream CheckInStream (messageId string, cardId string, cardType string);
-
-@sink(type = 'http-service-response', source.id = "checkIn", message.id = "{{messageId}}", 
-	@map(type = 'json'))
-define stream CheckedInStatus (messageId string, status bool, cardType string);
 
 /*
  Checks in /creates rejsekort */
@@ -113,13 +88,6 @@ left outer join DB
 select messageId, ifThenElse(not (DB.cardId is null) and isCheckedIn, "valid_ticket", "invalid_ticket") as messageName, CheckValid.instanceID as instanceID
 insert into CheckValidResponseStream;
 
-@info(name = 'CheckInPassengerRejsekort')
-from CheckInStream[cardType == 'rejsekort']
-join DB
-	on CheckInStream.cardId == DB.cardId
-select messageId, isCheckedIn as status, cardType
-insert into CheckedInStatus;
-
 @info(name = 'CheckInCard')
 from CheckInCardStream
 select cardId, checkInMachine as isCheckedIn
@@ -128,7 +96,7 @@ insert into DB
 set DB.isCheckedIn = isCheckedIn
 	on DB.cardId == cardId;
 
-@info(name = 'sendresponsecode')
+@info(name = 'CheckInCardStatus')
 from CheckInCardStream
 select messageId, cardId, checkInMachine as isCheckedIn
 insert into CreateRejsekortStatus;
