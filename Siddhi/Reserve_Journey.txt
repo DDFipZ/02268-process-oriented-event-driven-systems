@@ -89,14 +89,11 @@ define stream JourneyLog(stop string, finalStop string, time string, date string
 @sink(type = 'log') 
 define stream JourneyReserve(status string);
 
-@sink(type = 'log')
+@sink(type='log') 
 define stream JourneyReserveLog(status string, seats int, capacity int, lastReserved int);
 
-@sink(type = 'log') 
-define stream RejseplanenLog(firstResult string);
-
-@sink(type = 'log') 
-define stream LocationResponseLog(messageId string, origin string, destination string, time string, date string);
+@sink(type='log') 
+define stream CapacityLog(capacity int);
 
 define trigger Frequency at every 3 minutes;
 
@@ -126,7 +123,7 @@ insert into JourneyStream;
 from every ls = LocationStream, e2 = RejseplanenResponse2, e1 = RejseplanenResponse
 select e1.firstResult as originId, e2.firstResult as destinationId, ls.time as time, ls.date as date
 insert into JourneyStream;
-
+/*
 @info(name = 'query_nam1e')
 from RejseplanenResponse
 select firstResult as firstResult
@@ -136,13 +133,13 @@ insert into RejseplanenLog;
 from every ls = LocationStream, jr = JourneyResponse
 select ls.messageId as messageId, jr.stop as origin, jr.finalStop as destination, jr.time, jr.date
 insert into LocationResponseLog;
-
+*/
 @info(name = 'ReserveJourney') 
 from JourneyResponse
 left outer join reservedDB
  	on str:concat(stop, finalStop, time, date) == reservedDB.key
 select str:concat(stop, finalStop, time, date) as key, ifThenElse(reservedDB.key is null, 1, reservedDB.reserved + 1) as reserved, 
-'seats available' as status, ifThenElse(reservedDB.key is null, 100, reservedDB.capacity) as capacity, ifThenElse(reservedDB.key is null, 1, reservedDB.lastReserved) as lastReserved
+'seats available' as status, ifThenElse(reservedDB.key is null, 10, reservedDB.capacity) as capacity, ifThenElse(reservedDB.key is null, 1, reservedDB.lastReserved) as lastReserved
 update or 
 insert into reservedDB
 set reservedDB.reserved = reserved
@@ -158,9 +155,9 @@ insert into JourneyReserveLog;
 from JourneyResponse as j join reservedDB as r
  	on str:concat(j.stop, j.finalStop, j.time, j.date) == r.key
 select r.key as key, ifThenElse(r.reserved <= r.capacity, ifThenElse((r.reserved - r.lastReserved) > 5, 'more_capacity', 'yes_reservation'), 'no_reservation') as status, r.reserved as seats
-insert into COMBINED_ARMS;
+insert into PACKAGE_RESPONSE;
 
-from every ls = LocationStream, ca = COMBINED_ARMS
+from every ls = LocationStream, ca = PACKAGE_RESPONSE
 select ls.messageId as messageId, status as messageName, ls.instanceID as instanceID
 insert into delay;
 
@@ -168,11 +165,20 @@ from delay#window.time(2 seconds)
 select * 
 insert into LocationCamundaSink;
 
-from every ca = COMBINED_ARMS[status == 'more_capacity'], CapacityStream
+from every ca = PACKAGE_RESPONSE[status == 'more_capacity'], CapacityStream
 select ca.key as key
+insert into COMBINE_STREAM;
+	
+from COMBINE_STREAM
+select key as key
 update reservedDB 
 set reservedDB.capacity = reservedDB.capacity + 100, reservedDB.lastReserved = reservedDB.reserved
 	on reservedDB.key == key;
+	
+from COMBINE_STREAM left outer join reservedDB
+on COMBINE_STREAM.key == reservedDB.key
+select reservedDB.capacity
+insert into CapacityLog;
 	
 from CapacityStream
 select messageId as messageId, 'increased_capacity' as messageName, instanceID as instanceID
