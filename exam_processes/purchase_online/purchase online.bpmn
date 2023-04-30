@@ -35,7 +35,7 @@
       <bpmn:incoming>Flow_0upcgnp</bpmn:incoming>
       <bpmn:outgoing>Flow_0omfi94</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:serviceTask id="Activity_1cwd10x" name="Reserve ticket">
+    <bpmn:serviceTask id="Activity_1cwd10x" name="Create order">
       <bpmn:extensionElements>
         <camunda:connector>
           <camunda:inputOutput>
