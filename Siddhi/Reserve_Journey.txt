@@ -98,7 +98,7 @@ define stream RejseplanenLog(firstResult string);
 @sink(type = 'log') 
 define stream LocationResponseLog(messageId string, origin string, destination string, time string, date string);
 
-define trigger Frequency at every 1 minute;
+define trigger Frequency at every 3 minutes;
 
 define table reservedDB(key string, reserved int, status string, capacity int, lastReserved int);
 
@@ -162,6 +162,10 @@ insert into COMBINED_ARMS;
 
 from every ls = LocationStream, ca = COMBINED_ARMS
 select ls.messageId as messageId, status as messageName, ls.instanceID as instanceID
+insert into delay;
+
+from delay#window.time(2 seconds)
+select * 
 insert into LocationCamundaSink;
 
 from every ca = COMBINED_ARMS[status == 'more_capacity'], CapacityStream

@@ -1,0 +1,33 @@
+{
+  "components": [
+    {
+      "values": [
+        {
+          "label": "Add Wagon",
+          "value": "add_wagon"
+        },
+        {
+          "label": "Schedule Train",
+          "value": "schedule_train"
+        },
+        {
+          "label": "Deny More Capacity",
+          "value": "deny_more_capacity"
+        }
+      ],
+      "label": "CapacityHandle",
+      "type": "select",
+      "id": "Field_0l0c1nv",
+      "key": "CapacityHandle"
+    }
+  ],
+  "type": "default",
+  "id": "CapacityForm",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.9.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.18.0",
+  "schemaVersion": 7
+}
